@@ -30,9 +30,8 @@ More details of the code can be found in the PPC_User_Guide pdf document: https:
 If you require any more information, please contact ross.towe{at}.shell.com. Please include *Piecewise_Covariate_Extremes* in the subject of the email. 
 
 ## Current status
-* We are currently looking at improving the simulation procedure from the conditional extremes model of Heffernan and Tawn and streamlining the existing code we have.
-* Incorporating different return value definitions into the code see https://www.sciencedirect.com/science/article/abs/pii/S0029801820307095 for more information.
-
+* Assessment of the environmental contours.
+* Improving the fit of the Heffernan and Tawn model.
 
 ## Feedback
 This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). They are all a part of the MetOcean sede-x group on GitHub. 
