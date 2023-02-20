@@ -1,0 +1,103 @@
+%-------------------------------------------------------------------------------
+
+Having illustrated the key inputs and outputs of the code for a simple case - single associated variable and single covariate - in this section we provide a higher-dimensional example (you'll find the associated matlab run-scripts in the \verb|Case2| folder). We set the main (conditioning) response to Over-turning Moment and use two associated variables - wind speed and H$_S$. Further, we will use two covariates: wave direction (periodic) and season, non-periodic as (for illustration) we use day-of-the-year. The resulting figures below illustrate the result of running PPC with higher dimensions. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg1_Data_Margins"}
+	\caption{ Scatter plots of storm peak responses broken out by bin. Each row of subplots relates to a different response; and each column to a different covariate.}
+	\label{fig:Ex_Stg2a}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg2_Data_BinEdges"}
+	\caption{Example bin allocation. Bins are chosen at $[25,230,275,315]\times[145,270]$ degrees in direction and season. Storm peak data shown in black, chosen bin edges are shown with red dashed lines. Each row of subplots relates to a different response; and each column to a different covariate.}
+	\label{fig:Ex_Stg2b}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg2_Data_BinScatterPlot_Y2_Y1"}
+	\caption{Scatter plots of storm peak data for a \emph{single response} broken out by covariate bin. An equivalent figure file exists for each response. Each row corresponds to a fixed seasonal (or second covariate) bin, with columns corresponding to directional (or first covariate) bins. The dimension of the subplot array flexes with the number of covariates and covariate bins. }
+	\label{fig:Ex_Stg2c}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg3_Hs_1_DataTransform"}
+	\caption{Left column shows sea-state data for a \emph{single response} in grey and storm peaks in black plotted against direction (top row) and season (bottom row). Bin edges are indicated by dashed red lines. 2.5, 50 and 97.5 percentiles of estimated threshold across all bootstraps are plotted with blue lines. The Gamma location parameter is plotted in solid red. The middle and right columns show the response data on uniform and standard scale, against direction (top row) and season (bottom row). An equivalent figure file exists for each response. }
+	\label{fig:Ex_Stg3a}
+\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg3_Hs_2_Parameters"}
+	\caption{Black lines show  2.5, 50 and 97.5 percentiles of GP and Gamma parameters as a function of direction (first row) and season (second row). Red lines show bin edges. Each column refers to a different parameter: GP scale; Gamma shape and Gamma scale. An equivalent figure file exists for each response.}
+	\label{fig:Ex_Stg3b}
+\end{figure}
+\begin{figure}
+	\centering
+		\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg3_Hs_5_SectorGoodnessOfFit"}
+		
+			\caption{Diagnostic for quality of model-fit, broken out by covariate bin. Red dots show storm peaks, black lines are 2.5, 50 and 97.5 percentiles of model prediction over bootstraps. Red dots inside the confidence limits of the model indicate good fit. Each row corresponds to a fixed seasonal (or second covariate) bin, with columns corresponding to directional (or first covariate) bins. The dimension of the subplot array flexes with the number of covariates and covariate bins. }
+	
+		\label{fig:Ex_Stg3c}
+	\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_1_SmlvsData"}
+	\caption{Comparison of original data (black) and simulation from fitted H\&T model (red) for $10 \times$ period of the data (red) on standard margins (upper row) and original margins (bottom row). Each column relates to a different associated response conditioned on the main response; specifically, column $d$ relates to $Y_d | Y_1$ for $d \in \{2,...,D\}$. }
+	\label{fig:Ex_Stg4a}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_2_ResidualDiagnostics1"}
+	\caption{Diagnostic of the residuals from H\&T model fitting, where each row of plots corresponds to a different associated variable. Column 1 contains histograms of the residuals. The second column compares this distribution with the normal distribution (the form assumed in the model) via a normal QQ plot. It is typical that these residuals are quite skewed (not normal), which is why they are reused in the simulation procedure.}
+	\label{fig:Ex_Stg4b1}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_2_ResidualDiagnostics2"}
+	\caption{Diagnostic of the residuals from H\&T model fitting: residuals plotted against covariate(s). The $d$'th row of subplots corresponds to the model $Y_d | Y_1$ for $d \in \{2,...,D\}$. Each column shows the residuals plotted against a different covariate. Inhomogeneity of residuals with respect to a covariate (assessed using this plot) points to a model which does not sufficiently account for covariate effects, in which case the user should reconsider their covariate bin choice and/or NEP choice(s).}
+	\label{fig:Ex_Stg4b2}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_3_Parameters_WS"}
+	\caption{Plots of H\&T parameters over bootstrap re-samples for the model WS | H$_S$. In this case a non-stationary H\&T model was fitted, meaning that the first column contains plots of the $\alpha$ parameter as a function of the 2 covariates, direction and season. The second column contains histograms of the H\&T parameters which do not vary by covariate bin. The parameter uncertainty captures marginal (bootstrap and NEP) and conditional (bootstrap and H\&T NEP) uncertainty. An equivalent figure file exists for each of the $D-1$ associated responses. }
+	\label{fig:Ex_Stg4c}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_4_AlphaThresholdStability_WS"}
+	\caption{H\&T parameter $\boldsymbol{\alpha}$  as a function of the H\&T NEP for the model WS | Otm.. Black dots show individual bootstrap estimates, red lines are local binned median, 2.5 and 97.5 percentile estimates. A well behaved model should be stable over a range of NEP's. The dimension of the subplot array flexes with the number of covariates and covariate bins. An equivalent figure file exists for each of the $D-1$ associated responses.}
+	\label{fig:Ex_Stg4d}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_5_SectorGoodnessOfFit"}
+	\caption{Cross Validation plot showing lack of fit against chosen smoothness $\nu$ of H\&T parameter $\boldsymbol{\alpha}$. Low indicates good predictive performance. The red line indicates the optimal choice. When the red line is at the edge of the $\nu$ domain, the user should extend the range of $\nu$ considered using inputs HT.SmthLB and HT.SmthUB.}
+	\label{fig:Ex_Stg4e}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg4_HT_6_ConditionalReturnValueCDF"}
+	\caption{Conditional 10 (first column) and 100 (second columns) return value CDF's of $p(H_S| \textrm{Otm})$ and  $p(WS | \textrm{Otm})$. CDFs for each covariate bin are shown using coloured lines. Black line shows the omni-directional estimate.}
+	\label{fig:Ex_Stg4f}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/HsWs_Otm_ByDrcSsn/Figures/Stg5_Contour_2_Binnned_WS"}
+	\caption{Contour plots for a single associated response (conditioned on the main response), in this case WS | Otm, broken out by covariate bin. Two contour lines are drawn: one for 10 year and one for the 100 year return period. Each coloured line corresponds to a different contouring method. The green circle shows the lock point at each probability level through which all the contour methods have to pass. The dimension of the subplot array flexes with the number of covariates and covariate bins. An equivalent figure file exists for each of the $D-1$ associated responses. }
+	\label{fig:Ex_Stg5}
+\end{figure}
+
+\newpage

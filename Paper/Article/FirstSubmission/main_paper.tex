@@ -1,0 +1,220 @@
+%% 
+%% Copyright 2019-2020 Elsevier Ltd
+%% 
+%% This file is part of the 'CAS Bundle'.
+%% --------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'CAS Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+%% Template article for cas-sc documentclass for 
+%% single column output.
+%\documentclass[a4paper,fleqn,longmktitle]{cas-sc}
+
+\documentclass[a4paper,fleqn]{cas-sc} %% comment this out for double column
+%\documentclass[a4paper,fleqn]{cas-dc} %% comment this in for double
+\newcommand{\halfsize}{.5\linewidth} %% sc figure sizing
+%\newcommand{\halfsize}{\linewidth}  %% dc figure sizing
+
+%\usepackage[numbers]{natbib}
+%\usepackage[authoryear]{natbib}
+\usepackage[authoryear,longnamesfirst]{natbib}
+
+%%%Author macros
+\def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
+\tsc{WGM}
+\tsc{QE}
+\tsc{EP}
+\tsc{PMS}
+\tsc{BEC}
+\tsc{DE}
+%%%
+\input{extra_preamble}
+
+\begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+\shorttitle{PPC software}
+\shortauthors{Name1 et~al.}
+%\begin{frontmatter}
+
+\title [mode = title]{PPC : MATLAB software for non-stationary penalised piecewise constant marginal and conditional extreme value models}
+
+% \tnotetext[2]{The second title footnote which is a longer text matter
+%   to fill through the whole text width and overflow into
+%   another line in the footnotes area of the first page.}
+
+\author[shellnl]{Emma Ross}[orcid=0000-0002-0287-0611]
+\address[shellnl]{Shell Global Solutions International BV, 1031 HW Amsterdam, The Netherlands.}	
+
+\author[shelluk]{Ross Towe}[orcid=0000-0002-2111-6972]
+\address[shelluk]{Shell Research Limited, London SE1 7NA, United Kingdom.}
+
+\author[shellnl]{David Randell}[orcid=0000-0003-1127-5491]
+
+\author[shelluk,lancs]{Philip Jonathan}[orcid=0000-0001-7651-9181]
+\address[lancs]{Department of Mathematics and Statistics, Lancaster University LA1 4YF, United Kingdom.}
+\cormark[1]
+\ead{philip.jonathan@shell.com}
+\ead[url]{www.lancaster.ac.uk/~jonathan}
+
+\cortext[cor1]{Corresponding author}
+% \cortext[cor2]{Principal corresponding author}
+% \fntext[fn1]{This is the first author footnote. but is common to third
+%   author as well.}
+% \fntext[fn2]{Another author footnote, this is a very long footnote and
+%   it should be a really long footnote. But this footnote is not yet
+%   sufficiently long enough to make two lines of footnote text.}
+
+% \nonumnote{This note has no numbers. Might be useful.
+%   }
+
+%\address[1]{STOR-i Centre for Doctoral Training, Department of Mathematics and Statistics, Lancaster University, Lancaster, UK}
+%\address[2]{Department of Mathematics and Statistics, Lancaster University, Lancaster,UK}
+%\address[1]{Shell Research Ltd., London, UK}
+%\address[4]{MetOcean Research Ltd., New Plymouth, New Zealand}
+%
+%\author[2,3]{Philip Jonathan}[orcid=0000-0001-7651-9181]
+%\author[4]{Kevin Ewans}[orcid=0000-0003-3863-3973]
+%\address[shelluk]{Shell Research Limited, London SE1 7NA, United Kingdom.}
+%\address[shellnl]{Shell Global Solutions International BV, 1031 HW Amsterdam, The Netherlands.}		
+%\address[shellus]{Shell International Exploration and Production, Houston TX 77082-3101, USA.}	
+%\address[shellscot]{Shell UK Ltd., Aberdeen AB12 3FY, United Kingdom.}
+%\address[lancs]{Department of Mathematics and Statistics, Lancaster University LA1 4YF, United Kingdom.}	
+
+
+\begin{abstract}
+    The PPC software provides functionality for estimation of marginal and conditional extreme value models, non-stationary with respect to covariates, and environmental design contours. Generalised Pareto (GP) marginal models of peaks over threshold are estimated, using a piecewise-constant representation for the variation of GP threshold and scale parameters on the (potentially multidimensional) covariate domain of interest. 
+    The conditional variation of one or more associated variates, given a large value of a single conditioning variate, is described using the conditional extremes model of Heffernan and Tawn (2004, HT), the slope term of which is also assumed to vary in a piecewise constant manner with covariates. Optimal smoothness of marginal and conditional extreme value model parameters with respect to covariates is estimated using cross-validated roughness-penalised maximum likelihood estimation. Uncertainties in model parameter estimates due to marginal and conditional extreme value threshold choice, and sample size, are quantified using a bootstrap resampling scheme. Estimates of environmental contours using various schemes, including the direct sampling approach of Huseby et al. 2013, are calculated by simulation or numerical integration under fitted models. The software was developed for metocean applications, but is applicable generally to multivariate samples of peaks over threshold.
+\end{abstract}
+
+% \begin{graphicalabstract}
+% \includegraphics{figs/grabs.pdf}
+% \end{graphicalabstract}
+
+\begin{highlights}
+    \item ***Highlight1
+    \item ***Highlight2
+    \item ***Highlight3
+    \item ***Highlight4
+    \item ***Highlight5
+\end{highlights}
+
+\begin{keywords}
+extreme value \sep conditional extreme \sep non-stationarity \sep uncertainty propagation \sep environmental contour \sep MATLAB
+\end{keywords}
+
+\maketitle
+
+\section*{OUTSTANDING ACTIONS}
+
+\subsection*{Ross}
+\par Header comments: need to be standardised across all MATLAB; a mess at present, but easy to improve
+\par User guide: This is in really good state, so we just need to check it's up to date. What's not up to date? Ross/David, what have you modified or added? You said changes are all to HT module. So we need to check whether the userguide is correct or not. My (probably incomplete) list to be checked is
+\begin{itemize}
+	\item DL residuals
+	\item  Backfitting for parameter estimation
+	\item  Improved diagnostics 
+	\item  Importance sampling in place of/along side MC simulation
+\end{itemize}
+\par Are there any Shell hoops we need to jump through?
+\par Where should this be hosted from?
+\par Create new repo
+\\
+
+\subsection*{Emma}
+
+\par Act as dumb user, go through process following guide / spot any things to improve
+
+\par Update userguide with new bit in HT
+
+\par Mention the weird seasons option (used by Erik V for ship motions)
+
+\subsection*{Phil}
+
+\par Write
+
+\section{Introduction}
+
+\par Simple practically-useful approach to non-stationary marginal and conditional extreme value analysis with uncertainty quantification
+\par  Introduction : PPC in context (metocean, environment generally, other software)
+\par  Modelling context
+\par  Marginal and joint extremes
+\par  Covariates
+\par  Splines, Voronoi, Simon Wood, Ben Youngman
+\par  Paul Northrop review extremes software!
+\par Gilleland review: Gilleland Ribatet Stephenson (2013)
+\par extRemes 2.0 Gilleland, Katz 
+\par Gilleland Computing Software in EV Modelling and Risk Analysis
+\par  Earlier software reviews
+\par  Competitor software
+\par  What is the PPC USP?
+\par  Surge paper, ECSADES review paper
+\par  Extensions (PPC, PPL) with Ed
+\par  Other users: Kaust papers (need to search)
+\par Shop motions paper with Erik V
+
+\par ***Articles using PPC: \cite{BorEA19} suggest that the algorithm may be useful for analysis of extreme ocean current profiles with depth. \cite{GurEA21} have used their enhancement of an earlier version of the algorithm for analysis of electrical signals in the human brain. The software has motivated the development of analogous prototype software PPL for marginal extreme value modelling with penalised piecewise-linear covariate representations (\citealt{BrlEA22}). The software has also been used as a pre-processor for transformation of data to standard marginal scale, allowing joint and conditional extreme value analysis (e.g. \citealt{ShtEA20a}; \citealt{ShtEA21}).
+
+\par Need to say that people like Kevin have used the software for consultancy.
+
+\subsection*{Overview of article}
+
+\par ***Objective
+\par ***Layout
+
+\section{Methodology}
+
+\par ***Subsections on (1) margins, (2) cond ext, (3) contours, (4) UQ
+\par  Marginal model
+\par  Conditional model
+\par  Emphasise novel bits
+: DL residuals
+: Backfitting for parameter estimation
+: Improved diagnostics 
+: Importance sampling in place of/along side MC simulation
+:: Reference demanning paper, ... there's one other paper with import samp in it (approx 2018)
+: Estimation of return values and associated values
+:: Which options are available?
+:: Which options have been thoroughly tested?
+
+\par 
+
+\section{Overview of software}
+
+\subsection*{GitHub repository}
+
+\section{Case study : Single covariate, bivariate response}
+
+\par Directional analysis of significant wave height - spectral peak period
+
+\section{Case study : 2-D covariate, multivariate response}
+
+\par OTM, WS, Tp | Hs, directional-seasonal
+
+\section{Discussion}  
+\par Mention Hs, WS, Tp | Response
+\par Mention spatial conditional extremes
+\par Mention MEM / heatwave, Stan Amsterdam paper
+\par Mention multivaraite MEM, EVAR, Stan recent work
+\par Mention current profiles with depth
+\par More general application, environment
+
+\section{Acknowledgement}
+%
+The original version of this software was developed as part of a project part-funded by the European Union ERANET entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures” (ECSADES), and was summarised in a review paper on the definition and application of environmental contours (\citealt{RssEA19}).
+
+\bibliographystyle{cas-model2-names}
+%\bibliographystyle{plainnat}
+\bibliography{C:/Users/Philip.Jonathan/PhilipGit/Code/LaTeX/phil}
+%\bibliography{bib/Applied,bib/code, bib/Bloomfield}
+
+\end{document}

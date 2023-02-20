@@ -1,0 +1,43 @@
+
+
+Lock point: median nYr return value in X direction, in Y direction median Y value conditioned on seeing X point. 
+All based on importance sampling: Need to know where things were simulated and what the weights were.
+
+1. Exceedance: 
+============
+Weights in x and y|x direction (joint weights by multiplying together)
+Work out points which are in the upper and lower quadrants. In past we counted number of points (Monte Carlo)
+here we do a weighted sum. 
+Based on lock point: have a probability in U/L sector. Count and draw a line once have enough. 
+Distance measure to find closest point which gets the probability. 
+Essentially gridded the space out and calculated probabilities everywhere and draw line through the points which maintain lockpoint probability. 
+
+2. Isodensity:
+==================================
+Traditional isodensity, but based on weighted samples. 
+
+3. Huseby: 
+=============
+Like exceedance, except we count points above tangent. Compute tangent by projecting around a bunch of angles around central point. 
+Central point is mean of the data (using expectation and covariance, using normalisation of coordinate system for stability - make more angles where things change faster). 
+If angular density changes fast, the projection can change fast and you get nonsense contour: mitigation factors = transform to circles as much as possible + take weighted average / smoother (after have calculated
+contour but before you move back to original coordinates, polar coordinates).
+Check with <ERIK>: where the differences are with his implementation (he probably doesn't have smoothing...)
+
+Weighted CDF instead of empirical sorting of data: any time calculate expectations/variances / probabilities
+
+Note the circular transformation doesn't help much in multimodal cases...more non-elliptical/Gaussian the less that transformation will help. 
+<ERIK: how do they cope with this? Separate swell and sea data and deal with seperately (remove multimodality)
+
+
+
+How do you get weights?
+--------------------------
+Loop over direction, have to decide what range you simulate over
+Uniform sample on original scale, transform to standard scale. 
+For main variable: produce Laplace PDF (prob of x point you've chosen is in PDF world)
+For assc variable: below Thr use 2D kde to get density estimate (conditional so need p(x)*p(y givn x)). Normalise it by x probability because we want the conditional density (which get directly from H&T model, reording the equation: f(y|x).
+At end, need to divide by range to keep uniform properties.  
+
+NOTE: we haven't implemeted local residual accounting in the Import. Samp. procedure (so contours won't necessarily respect this flag in practice). 
+

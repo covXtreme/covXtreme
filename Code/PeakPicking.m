@@ -1,0 +1,127 @@
+function Dat=PeakPicking(Rsp,Cvr,Asc,IsPrd,NEP,RspLbl,CvrLbl)
+%function [YPk,XAss]=PeakPickingY,X,NEP);
+%INPUT
+% Rsp     n x 1 vector of main response 
+% Cvr     n x nCvr matrix of covariates (e.g. direction, season)
+% Asc     n x nAsc matrix of other associated variables 
+% IsPrd   nCvr x 1 (boolean) vector flag for if covairate is periodic
+% NEP     1 x 1 quantile level used to find threshold
+% RspLbl  nAsc+1 x 1 cell arrray of labels for the response (first) and the associated  variables
+% CvrLbl  nCvr x 1  cell arrray of labels for the covariates
+%Output
+% Dat.Y  nPk x (1+nAsc) vector of data with main response first
+% Dat.X  nPk x 1 vector of covariate (direction) data 
+
+validateattributes(Rsp, {'numeric'},{'vector'},'PeakPick','Y',1);
+n=numel(Rsp);  %number of observations
+validateattributes(Cvr, {'numeric'},{'nrows',n},'PeakPick','Thet',2);
+nCvr=size(Cvr,2);
+validateattributes(Asc, {'numeric'},{'nrows',n},'PeakPick','Asc',3);
+validateattributes(IsPrd, {'numeric','logical'},{'numel',nCvr,'integer'},'PeakPick','IsPrd',4);
+nAsc=size(Asc,2); %number of assoicated variables
+validateattributes(NEP, {'numeric'},{'scalar','>=',0,'<=',1},'PeakPick','NEP',5);
+validateattributes(RspLbl, {'cell'},{'numel',nAsc+1},'PeakPick','RspLbl',6);
+validateattributes(CvrLbl, {'cell'},{'numel',nCvr},'PeakPick','CvrLbl',7);
+
+%remove any nans in orginal data.
+I=isnan(Rsp) | any(isnan(Cvr),2) | any(isnan(Asc),2);
+Rsp=Rsp(~I);
+Cvr=Cvr(~I,:);
+Asc=Asc(~I,:);
+
+%% Exceedence threshold
+Thr=quantile(Rsp,NEP); %Find threshold corresponding to non-exceedance probability NEP
+Obs=(1:n)'; %observation numbers for original data
+IExc=Rsp>Thr; %index for exceedences
+ObsExc=Obs(IExc); %observation numbers for exceedence data
+
+%% find storm periods
+ObsDiff=diff(ObsExc); %difference between observation numbers of exceedances
+GapInd=ObsDiff>1;  %location of gaps bigger than 1 observation
+GapInd=[GapInd;true];  %add final observation as a gap
+Up=circshift(GapInd,1);  %upcrossings
+Dw=GapInd; %downcrossings
+Prd=[ObsExc(Up),ObsExc(Dw)];  %storm periods: col1=start of storm; col2=end of storm
+
+%% turn periods into index on exceedences
+Del=0.1*1;
+tPrd=[Prd(:,1)-Del,Prd(:,2)+Del]; %expand periods slightly to aviod boundary issues in histc.
+[~,I]=histc(ObsExc,[-Inf;reshape(tPrd',[],1)]);  %Find indices of data belonging to each storm period (add inf to make sure periods are even)
+I(mod(I,2)==1)=0;  %remove non-exceedance periods between storms (will have odd indices)
+Ind=I/2; %Put storm indices on 1:1:nStorm scale instead of 1:2:nStorm
+
+nExc=max(Ind); %number of exceedences
+%% Get exceedences
+RspExc=Rsp(IExc);
+CvrExc=Cvr(IExc,:);
+AscExc=Asc(IExc,:);
+%% find storm peak maximum index
+maxInd=accumarray(Ind,RspExc,[],@findmax,NaN); %index of maxima within storm
+SSCnt=accumarray(Ind,Ind,[],@numel,NaN); %sea state count per storm
+cmSSCnt=[0;cumsum(SSCnt(1:end-1))];
+maxIndOrg=maxInd+cmSSCnt; %index of maxima within exceedences
+
+%% Populate output vector
+Dat.Y=NaN(nExc,1+nAsc); %Initialise empty response matrix
+Dat.Y(:,1)=RspExc(maxIndOrg); %maxima within storm
+Dat.Y(:,2:end)=AscExc(maxIndOrg,:); %value of associated response @ maxima
+Dat.X=CvrExc(maxIndOrg,:);  %value of covariate (direction) @ maxima
+Dat.RspLbl=RspLbl; %reponse label
+Dat.CvrLbl=CvrLbl; %covariate label
+Dat.IsPrd=IsPrd;  %periodic covariate flag
+
+nDmn=size(Dat.Y,2);
+%% Plot 
+%% marginal
+if ~exist('Figures','dir')
+   mkdir('Figures') 
+end
+
+figure(1);
+clf;
+c=0;
+for i=1:nDmn
+    for iC=1:nCvr
+        c=c+1;
+        subplot(nDmn,nCvr,c)        
+        if i==1
+            plot(Cvr(:,iC),Rsp,'.','color',[1,1,1].*0.7);
+        else
+            plot(Cvr(:,iC),Asc(:,i-1),'.','color',[1,1,1].*0.7);
+        end
+        hold on
+        grid on
+        plot( Dat.X(:,iC),Dat.Y(:,i),'k.');        
+        xlabel(CvrLbl{iC})        
+        axis tight
+        if IsPrd(iC)
+            set(gca,'xtick',0:45:360,'xlim',[0,360])
+        end
+        ylabel(RspLbl{i})
+    end
+end
+savePics('Figures/Stg1_Data_Margins')
+
+%% joint
+if nDmn>1
+    figure(2);
+    clf;   
+    nAsc=size(Asc,2);
+    for iA=1:nAsc
+        subplot(1,nAsc,iA);
+        plot(Rsp,Asc(:,iA),'.','color',[1,1,1].*0.7);
+        hold on
+        grid on
+        plot( Dat.Y(:,1),Dat.Y(:,iA+1),'k.');
+        xlabel(RspLbl{1})
+        ylabel(RspLbl{iA+1})
+    end
+end
+savePics('Figures/Stg1_Data_Joint')
+
+end
+
+function I=findmax(Y)
+%find location of maximum
+[~,I]=max(Y);
+end

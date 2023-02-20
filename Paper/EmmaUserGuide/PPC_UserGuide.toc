@@ -1,0 +1,23 @@
+\contentsline {section}{\numberline {0}Introduction}{3}{section.0}%
+\contentsline {section}{\numberline {1}Stage 1: Data preparation}{5}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Stage1$\_$PeakPicking}{5}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Stage1$\_$SimulateData}{6}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Stage 2: Choose covariate bins}{9}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Running Stage2}{9}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Outputs}{9}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Stage 3: Fit marginal PPC models}{12}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The penalised piecewise constant model}{12}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Uncertainty quantification}{12}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Running Stage3}{12}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Outputs}{13}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Stage 4: Fit conditional extremes model}{20}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Conditional extremes model}{20}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Running Stage4}{20}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Outputs}{21}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Stage 5: Draw contours}{28}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Running Stage5}{28}{subsection.5.1}%
+\contentsline {section}{\numberline {6}Example: Multiple Associated Variables and Covariates}{33}{section.6}%
+\contentsline {section}{\numberline {A}Appendix 1 : Model details}{46}{appendix.A}%
+\contentsline {subsection}{\numberline {A.1}Marginal model}{46}{subsection.A.1}%
+\contentsline {subsection}{\numberline {A.2}Transformation to Standard Scale}{46}{subsection.A.2}%
+\contentsline {subsection}{\numberline {A.3}Conditional model}{47}{subsection.A.3}%

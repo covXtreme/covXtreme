@@ -1,0 +1,90 @@
+\subsection{The penalised piecewise constant model}
+%-------------------------------------------------------------------------------
+\subsection{Marginal Model}
+%
+Stage3 fits a penalised piecewise constant (PPC) extreme value model to a single marginal response.
+Non-stationary marginal extreme value characteristics of each variate are estimated in turn using a generalised Pareto (GP) model and roughness-penalised maximum likelihood estimation. For a given variable and covariate bin $k$, the extreme value threshold $\psi_{k}(\tau)$ is assumed to be a quantile of the empirical distribution of the variate in that bin, with specified non-exceedance probability $\tau$. $\tau$ is constant across bins. Threshold exceedances are assumed to follow the generalised Pareto  distribution with shape $\xi(\tau)$ and scale $\nu_{k}(\tau)$. Since estimation of the shape parameter is particularly problematic, the shape parameter is assumed constant (but unknown) across covariate bins. The Poisson rate of storm occurrence, generalised Pareto scale and threshold vary across bins but are constant within each bin. The extent to which the GP scale varies across bins is controlled by smoothness parameter $\lambda$. Threshold $\psi_{k}(\tau)$ is estimated first as a quantile, with no smoothing across bins. Then parameters $\xi(\tau),\{\nu_{k}(\tau)\}$ are estimated using penalised (log-) likelihood optimisation, maximising the value of the likelihood given in Appendix \ref{App1}.
+For the given margin, the resulting PPC model is used to transform the response data on original scale to Gumbel scale using the Probability Integral Transform (PIT) per covariate bin. Details of this procedure can be found in the Appendix. 
+
+\subsection{Uncertainty quantification}
+Two sources of randomness are carried through the estimation procedure. Firstly, the model is fitted for multiple boostrap samples of the data, uncertainty in the resulting model parameters then being carried through to later modelling stages. Secondly, for each boostrap sample, the marginal non-exceedance probability (used to establish the threshold within each covariate bin) is randomly sampled from a range provided by the user. 
+
+\subsection{Running Stage3}
+
+\textbf{Run Script}: \verb|Stage3_FitMargin1.m|, \verb|Stage3_FitMargin2.m|\\
+\textbf{Output files}: \verb|Output\MM1.mat|, \verb|Output\MM2.mat|\\
+\textbf{Figures}: \verb|Figures\\Stg3_Associated_1_DataTransform|, \verb|Figures\\Stg3_Associated_2_Parameters|, \verb|Figures\\Stg3_\%_3_CV|, \verb|Figures\\Stg3_\%s_4_SectorGoodnessOfFit|, \verb|Figures\\Stg3_\%s_5_OverallGoodnessOfFit|, \verb|Figures\\Stg3_\%_6_ThresholdStability|, \verb|Figures\\Stg3_\%_7_ReturnValueCDF|
+zz
+ The following inputs are listened in order of usage. For example, cross-validation settings may not need to be experimented with as much as parameters at the top of the list.
+
+\begin{itemize}
+	\item \verb|iDmn| = Specify the response for which to fit marginal model
+	\item \verb|NEP| = GP non-exceedence probability range
+ 	\item \verb|RtrPrd| = return period (years)
+	\item \verb|nB| = number of bootstrap resamples - must use same number for each margin
+	\item \verb|Yrs| = number of years the data spans
+	\item \verb|CV.CVMth| = 0: Only Cross Validate smoothness parameter for original dataset (fast); or 1: Cross Validate smoothness for every bootstrap resample (slow)
+	 \item \verb|CV.nCV| = number of cross-validation groups
+ 	\item \verb|CV.nSmth| = number of smoothness parameter values tried in cross-validation
+ 	\item \verb|CV.SmthLB| = lower bound (log10)  for smoothness range
+ 	\item \verb|CV.SmthUB|   = upper bound (log10)  for smoothness range
+\end{itemize}
+
+This stage should be run twice: once for each margin. Since suitable exceedance thresholds are inherently difficult to specify; we recommend the user starts with a wide range for \verb|NEP|, say $[0.3,0.95]$, working down to a narrower band of thresholds based on figure \ref{fig:Stg3_Hs_6_ThresholdStability} (more on this process below).
+
+Note that empty bins will still be assigned GP parameters (in the composite likelihood the empty bin will contribute no information but global values will result). 
+
+Figure \ref{fig:Stg3_Hs_1_DataTransform} shows the threshold and data transformed onto uniform and Gumbel margins: these are the original (not bootstrap resampled) data, thresholded with NEP = minimum from the nBoot-sample in NEP range. Once transformed to uniform and Gumbel margins no obvious pattern in the response should be visible. Any inhomogeneity with respect to direction suggests that the marginal model has not fitted well.
+
+Figures \ref{fig:Stg3_Hs_2_Parameters}, \ref{fig:Stg3_Hs_3_CV}, \ref{fig:Stg3_Hs_4_SectorGoodnessOfFit} ,\ref{fig:Stg3_Hs_5_OverallGoodnessOfFit}, \ref{fig:Stg3_Hs_6_ThresholdStability}and  \ref{fig:Stg3_Hs_7_ReturnValueCDF} show the results on the North Sea example on the $Hs$ margin.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_1_DataTransform"}
+	\caption{Left panel shows storm peaks in black, bin edges in red. 2.5, 50 and 97.5 percentiles of estimated threshold across all bootstraps in blue. Middle and right panels show data trasnformed to uniform and Gumbel scale}
+	\label{fig:Stg3_Hs_1_DataTransform}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_2_Parameters"}
+	\caption{Black lines show  2.5, 50 and 97.5 percentiles of GP scale and shape as a function of direction. Red lines show bin edges. Shape parameter is constant w.r.t to direction }
+	\label{fig:Stg3_Hs_2_Parameters}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_3_CV"}
+	\caption{Cross Validation plot showing Lack of fit against chosen smoothness $\lambda$ of GP scale. Low indicates good prediction performance. The red line indicates the optimal choice.}
+	\label{fig:Stg3_Hs_3_CV}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_4_SectorGoodnessOfFit"}
+	\caption{Fit diagnostics by directional sector. Red dots show storm peaks. Black lines are 2.5, 50 and 97.5 percentiles of model prediction over bootstraps. Red dots inside the confidence limits of the model indicates good fit.}
+	\label{fig:Stg3_Hs_4_SectorGoodnessOfFit}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_5_OverallGoodnessOfFit"}
+	\caption{Overall goodness of fit. Red dots show storm peaks. Black lines are 2.5, 50 and 97.5 percentiles of model prediction over bootstraps. Red dots inside the confidence limits of the model indicates good fit.}.
+	\label{fig:Stg3_Hs_5_OverallGoodnessOfFit}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_6_ThresholdStability"}
+	\caption{GP shape $\xi$ as a function of the NEP. Black dots show individual bootstrap estimates, red lines are local binned median, 2.5 and 97.5 percentile estimates. A well behaved model show be stable over a range of NEPS}
+	\label{fig:Stg3_Hs_6_ThresholdStability}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg3_Hs_7_ReturnValueCDF"}
+	\caption{Marginal 100 year return value CDF ($Hs_100$). Directional sectors are show using coloured lines. The black line shows the omni-directional estimate.}
+	\label{fig:Stg3_Hs_7_ReturnValueCDF}
+\end{figure}

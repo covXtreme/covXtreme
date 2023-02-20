@@ -1,0 +1,76 @@
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{subcaption}
+% \usepackage{amsthm} % Needed to typeset theorem environments.
+%\usepackage{MnSymbol}
+\newcommand{\Dft}[2]{D_{#1,#2}}%d_N(\omega\mid X_\Delta)
+\newcommand{\periodogram}[2]{I}%{I_{#1,#2}}
+\newcommand{\sumXt}[2]{\sum^{#1}_{t=1}X_{t#2}\exp\{-it#2\omega\}}
+\newcommand{\sumOmega}[3]{\sum_{\omega\in\Omega_#1}#3\exp\{it#2\omega\}}
+\newcommand{\sumDo}[2]{\sumOmega{#1}{#2}{\Dft{#1}{#2}(\omega)}}
+\newcommand{\mysqrt}[1]{\left(#1\right)^{\frac{1}{2}}}
+\newcommand{\Exponential}[1]{\text{Exponential}\left(#1\right)}
+\newcommand{\cNorm}[2]{\mathcal{CN}\left(#1,#2\right)}
+\newcommand{\Norm}[2]{\mathcal{N}\left(#1,#2\right)}
+\newcommand{\acf}{c}
+%%
+% Commands for special set of numbers.
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}[1]{\mathbb{P}\left( #1 \right)}
+\newcommand{\EE}[1]{\mathbb{E} \left[ #1 \right]}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\e}[1]{{\textrm{e}}^{#1}}
+% Commands for useful operators.
+\newcommand{\di}{\text{diag}}
+\newcommand{\de}{\mathrm{d}}
+\newcommand{\si}{\Sigma}
+\newcommand{\del}{\Delta}
+\newcommand{\cov}[1]{\, {\rm cov}\left( #1 \right) }
+\newcommand{\var}[1]{\, {\rm var}\left( #1 \right) }
+\newcommand{\cum}[1]{\, {\rm cum}\left( #1 \right) }
+\newcommand{\varhat}[1]{\, {\rm \hat{var}}\left( #1 \right) }
+\newcommand{\covhat}[1]{\, {\rm \hat{cov}}\left( #1 \right) }
+\newcommand{\toas}{\xrightarrow{\text{a.s.}}}
+\newcommand{\todis}{\xrightarrow{\text{d}}}
+\newcommand{\supp}{\text{supp}}
+\newcommand{\abs}{\text{abs}}
+\newcommand{\doubint}{\!\int\!\!\!\int}
+\DeclareMathOperator*{\argmin}{argmin} % no space, limits underneath in displays
+\DeclareMathOperator*{\argmax}{argmax} % no space, limits underneath in displays
+% Command for text within a math sub/super-script.
+\newcommand{\stext}[1]{\text{\scriptsize{#1}}}
+
+
+
+% commands for model
+\newcommand{\expbit}{\exp\left \{-\frac{r}{s}\left(\frac{\omega}{\omega_p}\right)^{-s}\right \}}
+% \newcommand{\parbit}{\omega,\alpha,\omega_p,\gamma,r}
+% \newcommand{\minusparbit}{-\omega,\alpha,\omega_p,\gamma,r}
+\newcommand{\parbit}{\omega\mid\theta}
+\newcommand{\minusparbit}{-\omega\mid\theta}
+\newcommand{\dbit}{\delta(\parbit)}
+\newcommand{\sigbit}{\sigma(\parbit)}
+\newcommand{\fbit}{f_G(\parbit)}
+\newcommand{\gbit}{g(\parbit)}
+\newcommand{\Sbit}{S_G(\parbit)}
+\newcommand{\pard}[1]{\frac{\partial}{\partial #1}}
+\newcommand{\negderiv}[1]{\pard{#1}\fbit&=\pard{#1}f_G(\minusparbit)}
+
+% commands that need notational checking
+\newcommand{\XN}{\bX_{\Delta,N}}
+\newcommand{\bX}{\boldsymbol{X}}
+\newcommand{\bx}{\boldsymbol{x}}
+
+% Theorem definitions/
+% \newtheorem{lemma}{Lemma}[section]
+% \newtheorem{theorem}[lemma]{Theorem}
+% \newtheorem{proposition}[lemma]{Proposition}
+% \newtheorem{corollary}[lemma]{Corollary}
+\newtheorem{proposition}{Proposition}
+\newproof{proof}{Proof}
+
+%% matlab logo
+\newcommand{\matlab}{MATLAB }

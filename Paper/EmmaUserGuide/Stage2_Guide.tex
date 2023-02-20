@@ -1,0 +1,51 @@
+% Stage2_Guide.tex
+At the start of Stage 2, peak-picked data $\{y_{di}\}_{i=1}^{N}$ for each marginal response $d \in \{1,\ldots,D\}$ are loaded from Stage 1. In order to fit a piecewise constant Gamma-GP model to this data, we first need to specify covariate bins \verb|BinEdg|. This script is used to experiment with and set covariate bin edges. A plot of the marginal data against the covariate(s) with current bin locations marked in red is produced. The goal is to set bin edges which effectively separate the data into sections with homogeneous covariate characteristics (rate and scale), after which we move onto Stage 3. As soon as you are happy with your bin choice, you can move onto Stage 3. The set of bin-edges you last tried will automatically be fed to Stage 3 for subsequent use.
+
+\subsection{Running Stage2}
+\textbf{Run Script}: \verb|Stage2_SetBinEdges.m|\\
+\textbf{Output files}: \verb|Output\Bin.mat|\\
+\textbf{Inputs}: \verb|BinEdg| [$ 1 \times C$] cell array storing bin edges for each covariate.
+
+\mbox{
+
+}
+
+In the case of a single covariate, bin edges should be provided to input \verb|BinEdg| in $\{[...]'\}$ format. Note that we need to transpose ($'$ operation in Matlab) to put the bin edges into long vector format. In the case of multiple covariates; bin edges should be provided in $\{[...]',[...]'\}$ format; resulting in 2D bins which are the multiplicative combination of bins in each individual covariate dimension. 
+
+Note that, for covariates identified as periodic (setting \verb|IsPrdCvr| = 1 in Stage1), bins will automatically wrap around 360. This means that, if 0 or 360 are not specified in the vector of bin edges for that covariate; by default there will be a bin which straddles 0. If your covariate data is periodic but not on $[0,360)$, you will need transform it to $[0,360)$, e.g. by adjusting the raw data within the Stage2 script, before assigning it to \verb|Cvr|. 
+
+If you are using a non-periodic covariate, the data can be on any scale but bear in mind that the first and last entries in the bin-edge vector will be interpreted as end-points for the range of the covariate. Specifically, you should take care to ensure that the outer bin edges (first and last) are wider than the range of the data. If you do not do this, an error will be produced when a check is made that the data lies within the range defined by the first and last bin edges. 
+
+Further points to note:
+\begin{itemize}
+\item A warning will be produced if you have too few observations ($<30$ total number of observations, not exceedances) in any given bin. This is to ensure you have enough data to fit to in each bin and prevents you from over-fitting by defining too many bins. 
+\item If the total number of bins in the model is $>16$, the code can struggle to estimate the generalised Pareto model well, so the number of bins should be kept relatively small. Note that a small number of bins in each covariate dimension multiplies to a large number of total bins; e.g. 4 bins in direction and season results in $4\times 4 = 16$ bins in total.
+\item This code is designed to run non-stationary models and hence expects some form of covariate input. A non-stationary (covariate-free) model can be run using this code however, by creating a single periodic bin via:
+	\begin{itemize}
+		\item supplying e.g. time or an index on the observations to the \verb|Cvr|;
+		\item setting \verb|IsPrd| to 0 for all covariates (enforcing periodicity);
+		\item setting \verb|BinEdg| to $\{[\min( \verb|Cvr|),\max(\verb|Cvr|)]'\}$.  
+	\end{itemize} 
+The user is however \textbf{strongly encouraged} to incorporate covariates which are known to strongly affect the response(s). Failure to account for covariate effects can lead to very different return-value estimates and environmental contours. 
+\end{itemize}
+
+\subsection{Outputs}
+Running Stage 2 creates a MATLAB data file (\verb|.mat| extension) called \verb|Data|, stored in a folder called \verb|Output|.
+
+The following Figures are also generated and saved as \verb|.pdf|s in the \verb|Figures| folder. Figure \ref{fig:Stg2_Data_BinEdges} illustrates the user's bin choice as red lines on top of scatter plots of response(s) against covariate(s). Then for each associated variable, a figure like Figure \ref{fig:Stg2_Data_BinScatterPlot_Y2_Y1} is produced, containing scatter plots of the associated response on the $y$ axis and main / conditioned response on the $x$ axis, broken out by covariate bin. The dependence structure illustrated by theses subplots (non-stationary with respect to covariates) is what we aim to model via marginal and conditional extremes modelling in subsequent Stages 3 and 4. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/Tp_Hs_ByDrc/Figures/Stg2_Data_BinEdges"}
+	\caption{Example bin allocation. Bins are chosen at [0,25,60,230,275,315] degrees. Storm peak data shown in black, chosen bin edges are shown with red dashed lines.}
+	\label{fig:Stg2_Data_BinEdges}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"./PPCGuideExamples/Tp_Hs_ByDrc/Figures/Stg2_Data_BinScatterPlot_Y2_Y1"}
+	\caption{ Scatter plots of storm peak responses broken out by bin.}
+	\label{fig:Stg2_Data_BinScatterPlot_Y2_Y1}
+\end{figure}
+
+

@@ -1,0 +1,101 @@
+%-------------------------------------------------------------------------------
+\subsection{Conditional extremes model}
+%
+The Gumbel-scale sample $\{y_{i1},y_{i2}\}_{i=1}^{n}$ above some threshold of the conditioning variate $Y_1$ is used to estimate a conditional extremes model with parameters $\alpha_{\tilde{\tau}k}, \beta_{\tilde{\tau}}, \mu_{\tilde{\tau}}$ and $\sigma_{\tilde{\tau}}$
+%
+\pbe
+(Y_2 | Y_1 = y_{i1}) = \alpha_{\tilde{\tau} k} y_{i1} + y_{i1}^{\beta_{\tilde{\tau}}} W_{\tilde{\tau}}  \text{ for } y>\phi_{\tilde{\tau}  k},
+\pee
+%
+where $W_{\tilde{\tau}} \sim N(\mu_{\tilde{\tau}}, \sigma_{\tilde{\tau}}^2)$ is assumed for model estimation only. Threshold $\phi_{\tilde{\tau} k}$ is defined as the quantile of the standard Gumbel distribution with non-exceedance probability $\tilde{\tau}$ for covariate bin $C_k$.
+%
+An diagram of the 
+
+
+\subsection{Running Stage4}
+
+
+Running Stage4 fits a Hefferenan and Tawn conditional extreme value model. Marginal model data and parameters (\verb|Output\MM1.mat| and \verb|Output\MM2.mat|) are loaded from stage 3, described in section \ref{Sec:Stg3}. \\
+
+\textbf{Run Scripts}: \verb|Stage4_FitHeffernanTawn.m|\\
+\textbf{Output files}: \verb|Output\HT.mat|\\
+\textbf{Figures files}: 
+\begin{itemize}
+\item \verb|Figures\Stg4_HT_1_SmlvsData|
+\item \verb|Figures\Stg4_HT_2_ResidualDiagnostics|
+\item \verb|Figures\Stg4_HT_3_Parameters|
+\item \verb|Figures\Stg4_HT_4_AlphaThresholdStability| 
+\item \verb|Figures\Stg4_HT_4_BetaThresholdStability|
+\item \verb|Figures\Stg4_HT_6_ConditionalReturnValueCDF|
+\end{itemize}
+
+The number of bootstraps are inherited from the marginal models so need to have the same number in each margin.\\
+\textbf{Inputs}:
+\begin{itemize}	
+	\item \verb|HTNEP| = Conditional non exceedence probability range. Make sure HT NEP$>\exp(-\exp(-0))=0.368$ or the Gumbel transformation will fail.
+	\item \verb|NonStationary| = 0: use a stationary $\alpha$ parameter in HT; 1: fit penalised piecewise constant (non-stationary) $\alpha$ using the same bins as the marginal analysis
+	\item \verb|CV.CVMth| = 0: Only Cross Validate smoothness for original dataset (fast); or 1: Cross Validate smoothness for every bootstrap resample (slow)
+	 \item \verb|CV.nCV| = number cross-validation groups
+ 	\item \verb|CV.nSmth| = number smoothnesses tried in CV
+ 	\item \verb|CV.SmthLB| = lower bound (log10)  for smmothness range
+ 	\item \verb|CV.SmthUB|   = upper bound (log10)  for smmothness range
+\end{itemize}
+
+Plots of model parameter estimates and residuals distributions as a function of threshold and covariates aid selection of an interval of thresholds consistent with modelling assumptions. The conditional extremes model form is $(Y_2 |Y_1 = y) = \alpha y + y ^{\beta} W$  for $y>\phi$, for sufficiently large threshold $\phi$, where $\alpha \in [0,1]$ and $\beta \in (-\infty,1]$. $W$ is a random variable with unknown distribution, the density of which we estimate using residuals from the fitted model. For fitting purposes only, we assume that $W \sim N(\mu, \sigma^2)$. The model fitting corresponding to estimating $\{\alpha, \beta, \mu, \sigma\}$ given a sample of values for $\{Y_1, Y_2\}$. All of $\phi, \alpha, \beta, \mu$ and $\sigma$ are in principle functions of covariates. Using the conditional extremes model, we simulate joint extremes on the standard Gumbel scale, and transform these realisations to the original scale using the probability integral transform once more. Below the threshold $\phi$, realisations can be simply re-sampled from the sub-sample of the original data for which $y \leq \phi$.
+
+
+Figure \ref{fig:Stg4_HT_1_SmlvsData} shows a comparison of simulation and data using HT model.  On original scale 2 different spikes can be seen at the upper end reflecting differnt marginal characteristics in Tp. Figure  \ref{fig:Stg4_HT_2_ResidualDiagnostics} show the results on the North Sea $Tp| Hs$ example. It is typical that these residuals are quite skewed (not normal), which is why they are reused in the simulation procedure. Figure \ref{fig:Stg4_HT_3_Parameters} shows the model parameters $\alpha$ is near 1, this indicates strong dependency between large Hs and Tp. $\alpha$ nearer 0 would indicate weak or no dependency. Figure \ref{fig:Stg4_HTDiagram} illustrates this parameter influence. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"HTDiagram"}
+	\caption{Illustration of the impact of HT parameters $\alpha$ and $\beta$ on the structure of dependence between two Gumbel distributed random variables}
+	\label{fig:Stg4_HTDiagram}
+\end{figure}
+
+
+Figures \ref{fig:Stg4_HT_4_AlphaThresholdStability} and \ref{fig:Stg4_HT_4_BetaThresholdStability} show threshold stability in the same way as the marignal model threshold ranges show be chosen over which the parameters given stable parameter estimated. A range of [0.5,0.7] would seem to be a reasonable choice here. Figure \ref{fig:Stg4_HT_6_ConditionalReturnValueCDF} show the results on the North Sea $Tp| Hs$ example. Here the omni directional CDF is bimodal, this is largely due to marginal differences in Tp. Similar effects can be seen in figure \ref{fig:Stg4_HT_1_SmlvsData}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_1_SmlvsData"}
+	\caption{Comparison of simulation and data using HT model or Gumbel margins (left plot) and Original margins (right plot). Black dots show original data and red dots show a simulation under the HT model of 10 period of the data. In this on original scale 2 different spikes can be seen at the upper end reflecting differnt marginal characteristics in Tp }
+	\label{fig:Stg4_HT_1_SmlvsData}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_2_ResidualDiagnostics"}
+	\caption{Diagnostic of the residuals from the HT fitting. Left panel shows a histogram of the residuals. Middle panel shows a normal QQ plot.  The right panel show residuals as a function of direction. It is typical that these residuals are quite skewed (not normal), which is why they are reused in the simulation procedure.}
+	\label{fig:Stg4_HT_2_ResidualDiagnostics}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_3_Parameters"}
+	\caption{Histograms of the HT parameters over bootstrap re-samples. The parameter uncertainty captures, marginal, threshold and conditional uncertainty.  }
+	\label{fig:Stg4_HT_3_Parameters}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_4_AlphaThresholdStability"}
+	\caption{HT parameter $\alpha$  as a function of the HT NEP. Black dots show individual bootstrap estimates, red lines are local binned median, 2.5 and 97.5 percentile estimates. A well behaved model show be stable over a range of NEP's }
+	\label{fig:Stg4_HT_4_AlphaThresholdStability}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_4_BetaThresholdStability"}
+	\caption{HT parameter $\beta$ as a function of the HT NEP. Black dots show individual bootstrap estimates, red lines are local binned median, 2.5 and 97.5 percentile estimates. A well behaved model show be stable over a range of NEP's}
+	\label{fig:Stg4_HT_4_BetaThresholdStability}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg4_HT_6_ConditionalReturnValueCDF"}
+	\caption{Conditional return value CDF's $p(\textrm{Tp} | Hs_{100})$. Directional CDFs are show using coloured lines. Black line shows the omni-directional estimate. In this case using the North Sea data the omni directional CDF is bimodal, this is largely due to marginal differences in Tp. Similar effects can be seen in figure \ref{fig:Stg4_HT_1_SmlvsData}}
+	\label{fig:Stg4_HT_6_ConditionalReturnValueCDF}
+\end{figure}
+

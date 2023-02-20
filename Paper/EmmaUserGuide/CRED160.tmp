@@ -1,0 +1,34 @@
+% Stage2_Guide.tex
+
+In order to fit a piecewise constant GP model to each marginal response $\{y_{di}\}_{i=1}^{n}$, we first need to specify covariate bins \verb|DrcEdg|. This script should be used to try out different bins. A plot of the marginal data against the covariate with current bin locations marked in red is produced. When bin edges which effectively separate the data into sections with homogeneous directional characteristics (rate and scale) are found, move onto Stage3. The bins provided in Stage2 will be carried through to marginal model fitting in stage 3 (see section \ref{Sec:Stg3}). Peak picked data are loaded from Stage 1, described in section \ref{Sec:Stg1} (see section \ref{Sec:Stg1}).
+
+\subsection{Running Stage2}
+
+There are 2 functions:\\
+\textbf{Run Script}: \verb|Stage2_SetBinEdges.m|\\
+\textbf{Output files}: \verb|Output\Bin.mat|\\
+\textbf{Figures}: \verb|Figures\Stg2_Data_BinEdges|, \verb|Figures\Stg2_Data_BinScatterPlot_Y2_Y1|\\
+
+Points to note:
+\begin{itemize}
+\item A warning will be produced if you have too few observations in any given bin (note: this is “total number of observations” not exceedances). This is to ensure you have enough data to fit to in each bin and prevents you from over-fitting by defining too many bins). 
+\item Bins loop around 360 degrees so unless you specify 0 or 360 as an edge, you will have a bin which straddles 0
+\item Make sure the bins are suitable for BOTH margins
+\item If you choose more than 8 covariate bins the parameter estimation can become unreliable.
+\end{itemize}
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg2_Data_BinEdges"}
+	\caption{Example bin allocation. Bins are chosen at [0,25,60,230,275,315] degrees. Storm peak data shown in black, chosen bin edges are shown with red dashed lines.}
+	\label{fig:Stg2_Data_BinEdges}
+\end{figure}
+
+\begin{figure}[hb]
+	\centering
+	\includegraphics[width=0.9\textwidth]{"../PPC_Analysis/TpHs/Figures/Stg2_Data_BinScatterPlot_Y2_Y1"}
+	\caption{ Scatter plots of storm peak responses broken out by bin.}
+	\label{fig:Stg2_Data_BinScatterPlot_Y2_Y1}
+\end{figure}
+
+

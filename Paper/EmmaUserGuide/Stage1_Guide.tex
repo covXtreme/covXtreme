@@ -1,0 +1,132 @@
+% STAGE 1 _ DATA GENERATION
+%%%%%%%%%%%%%%%%%%%%%
+In Stage 1 we prepare $D$-dimensional peaks over threshold response data  $\{\dot{y}_{1i},\dot{y}_{2i},\ldots \dot{y}_{Di}\}_{i=1}^{N}$  with $C$ associated covariates $\{x_{1i},x_{2i},\ldots,x_{Ci}\}_{i=1}^{N}$.  The user has a choice of 2 different run files for this stage, both producing a data file called \verb|Data.mat|, the format of which is described below. When data is available,  for example time series observations for $H_S$ and $T_P$,  \verb|Stage1_PeakPicking| should be run to identify storm peak data from the sea-state observations. In the case that we have no existing data, or we simply want to test the model, \verb|Stage1_SimulateData.m| should be run to generate response data directly.
+
+\textbf{Run Scripts}: \verb|Stage1_PeakPicking.m| OR \verb|Stage1_SimulateData.m| (in the \verb|Case1| folder)\\
+\textbf{Output data}: \verb|Output\Data.mat| with the following contents
+\begin{itemize}
+	\item  \verb|Dat.Y| [$N \times D$] matrix of response data, with the main (conditioned) response in the first column; and associated response data in the subsequent columns.
+	\item \verb|Dat.X| [$N \times C$] matrix of covariate data, with each column representing a different covariate.
+	\item \verb|Dat.RspLbl| [$1 \times D$] cell array containing string descriptions of the responses, e.g. \verb|{'Hs','Tp'}|.
+	\item \verb|Dat.CvrLbl| [$1 \times C$] cell array containing string descriptions of the covariates.
+	\item \verb|Dat.IsPrd| [$1 \times C$] boolean vector marking periodicity of covariates (0 = non-periodic; 1 = periodic).
+\end{itemize}
+You can also skip Stage 1 entirely by manually populating an equivalent \verb|Data.mat| data file with a format identical to that desribed above. 
+ 
+Figures generated when running the PPC software are stored in a \verb|Figures| subdirectory, with the stage they are generated in indicated by prefix \verb|StgX_| in the file name. 
+
+\subsection{Stage1$\_$PeakPicking} %%%
+This script converts time series data into peaks-over-threshold data, suitable for modelling with the generalised Pareto distribution. 
+
+An example data file called \verb|CNS_ResponseData.mat| is provided with this software. If you wish to use this data file, its location should be provided to the \verb|load()| command at the start of the MATLAB script. If you are instead using a dataset of your own, not in \verb|.mat| format, you should replace this line with a call to e.g. the \verb|readcsv()| function so that you can enter your data properties to the relevant inputs described below. 
+
+
+\textbf{Inputs}:
+	\begin{itemize}
+		\item \verb|Rsplbl| [$D\times 1$]  cell array, containing string descriptions/names for the main and associated responses (in that order) - ensures that plots produced by the analysis are labelled correctly.
+		\item \verb|CvrLbl| [$C\times 1$]  cell array containing string descriptions/names for the covariate(s).
+		\item \verb|Rsp| [$N\times 1$] vector containing the main response data (the response which we condition on).
+		\item\verb|Cvr| [$N\times C$] matrix where each column contains different covariate data. Number of columns must match size of \verb|CvrLbl|. 
+		\item \verb|IsPrdCvr| [$C\times 1$ boolean] flag dictating periodicity of covariate(s). If 1, covariate data loops on 360. When using more than one covariate, this is a vector input with one flag per covariate, e.g. [1,0]. Note that, if you have a periodic covariate which is \textit{not} on [0,360), you must rescale it to cover this range to enable periodicity to be accounted for. Non-periodic covariate data can, on the other hand, be provided on any scale. 
+		\item \verb|Asc| [$N \times (D-1)$] matrix where each column contains a different associated response - the responses which will be conditioned on the value of the main response given in \verb|Rsp|. Number of columns must match the size of \verb|RspLbl| minus one. 
+		\item \verb|NEP| [scalar] non-exceedance probability (on [0,1)) used to define the threshold for storm-identification.
+	\end{itemize}
+
+
+Suppose that we have set the main response \verb|Rsp|$ = H_{S}$ and associated response  \verb|Asc|$ = T_{P}$; the identification of storm trajectories and storm peak exceedances is illustrated in Figure \ref{fig:StormPeak}. Note that we peak pick over the main response  \verb+Rsp+ (in this case $H_{S}$) and take \emph{associated} observations as peaks over threshold for $T_{P}$. 
+\begin{figure}[hb]
+\centering
+\includegraphics[width=0.8\textwidth]{Figures/StormPeakDiagram}
+\caption{Peak Picking Illustration}
+\label{fig:StormPeak}
+\end{figure}
+
+An example of storm peak-picked data is shown for North Sea data in Figures \ref{fig:Stg1_Data_Margins} and \ref{fig:Stg1_Data_Joint}. A quantile level of $t=0.6$ was used to set the peak picking threshold giving 2566 storms.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{"PPCGuideExamples/TpHs/Figures/Stg1_Data_Margins"}
+\caption{Marginal Hs and Tp as a function of direction for North Sea data. Storm peaks shown in black, all sea states in grey} 
+\label{fig:Stg1_Data_Margins}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\textwidth]{"PPCGuideExamples/TpHs/Figures/Stg1_Data_Joint"}
+\caption{Joint distribution Hs and Tp  for North Sea data. Storm peaks shown in black, all sea states in grey} 
+\label{fig:Stg1_Data_Joint}
+\end{figure}
+
+\subsection{Stage1$\_$SimulateData}
+An alternative to using real data is to test the model using simulated data with known characteristics. Note that, though this update to the code accommodates \emph{fitting} models for multivariate cases with multiple covariates; the simulation script is restricted to bivariate cases with a single covariate only. The first four inputs required by the user set the dimensions of the data to be simulated:
+
+
+\begin{enumerate}
+\item \verb+nDmn+ [scalar] the number of response variables you want to simulate
+\item \verb+nObs+ [scalar] the number of observations you want to simulate 
+\item \verb+nBin+ [scalar] the number of covariate bins you want (common to both margins if \verb+nDmn+ $> 1$)
+\item \verb+BinEdg+ [$1 \times $ \verb+nBin+] vector of edges of covariate bins on $[0,360]$ (these will wrap around 0)
+\end{enumerate}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{"PPCGuideExamples/MvnRho09/Figures/Stg1_Data_Simulated_Margins"}
+\caption{Example Simulated Data}
+\label{fig:Stg1_Data_Simulated_Margins}
+\end{figure}
+For each response, the user is then required to set the following distributional properties based on the number of bins \verb+nBins+ you specified:
+\begin{enumerate}
+\item \verb+MM.Shp+ [$1 \times $ \verb+nBin+] vector of GP shape parameters for each covariate bin
+\item \verb+MM.Scl+ [$1 \times $ \verb+nBin+] vector of GP scale parameters for each covariate bin
+\item \verb+MM.Thr+ [$1 \times $ \verb+nBin+] vector of GP thresholds for each covariate bin 
+\item	\verb+Rat+ [$1 \times $ \verb+nBin+]  vector of Poisson rate parameters for each covariate bin
+\end{enumerate}
+Finally, in the case that the user chooses to simulate two responses (\verb+nDmn+ $=2$), the dependence model used and its associated parameters should also be set with the following inputs:
+\begin{enumerate}
+\item \verb+Jnt.Mth+: Choice of dependence model: multivariate normal \verb+MVN+; logistic \verb+LGS+; or asymmetric logistic \verb+ASL+
+\item Associated parameters:
+   \begin{itemize}
+      \item\verb+MVN+ : dependence parameter \verb+Rho+ $ \in [0,1]$
+      \item \verb+LGS+ : dependence parameter \verb+Alp+  $\in [0,1]$
+      \item	\verb+ASL+ : dependence parameter \verb+Alp+  as above and weighting parameters \verb+Theta+ (one for each response/margin) $\in [0,1]$ setting the proportion of `random' points off of the logistic dependence
+   \end{itemize}
+\end{enumerate}
+
+The result of running this script is the \verb|Output\Data.mat| file as described in the previous section. Figure \ref{fig:Stg1_Data_Simulated_Margins} provides an example, akin to the black-dot peak observations in Figure \ref{"../PPC_Analysis/TpHs/Figures/Stg1_Data_Margins"}. 
+
+
+%\vspace{20pt}
+% \noindent \textbf{Dependence Structures} \\
+%Simulated responses with common PPC margins and a multivariate normal dependence structure with parameter \verb+Rho+ $= 0.8$ are illustrated in Figure \ref{fig:MVN}. Figure \ref{fig:LGS} illustrates the logistic dependence structure with \verb+Alp+ $ = 0.3$. Note that the multivariate normal structure is asymptotically independent, whilst the logistic alternative is asumptotically dependent. 
+%
+%\begin{figure}
+%    \centering
+%    \begin{subfigure}{0.4\textwidth}
+%        \includegraphics[width=\textwidth]{Figures/Stg1Sim/Data_Simulated_Joint_MVN0p8.jpg}
+%        \cprotect\caption{multivariate normal dependence structure with  \verb+Rho+ $= 0.8$  }
+%        \label{fig:MVN}
+%    \end{subfigure}
+%    \begin{subfigure}{0.4\textwidth}
+%        \includegraphics[width=\textwidth]{Figures/Stg1Sim/Data_Simulated_Joint_LGS0p3}
+%        \cprotect\caption{logistic dependence structure with \verb+Alp+ $ = 0.3$}
+%        \label{fig:LGS}
+%    \end{subfigure}
+%    \caption{Simulated responses on common PPC margins with two different joint dependence structures}\label{fig:MvnLgsDep}
+%\end{figure}
+%
+%The asymmetric logistic dependence option is illustrated in Figure \ref{fig:ASL}. This model is a more complex version of the logistic model which facilitates the simulation of more `physical' or realistic data. As the strength of dependence is more prevalant in higher values of Response 1, the threshold choice is particularly influential in this case. 
+%
+%\begin{figure}
+%    \centering
+%    \begin{subfigure}{0.4\textwidth}
+%        \includegraphics[width=\textwidth]{Figures/Stg1Sim/Data_Simulated_Joint_ASL0p3_0p1_0p4.jpg}
+%        \cprotect\caption{\verb+Alp+ $= 0.3$, \verb+Theta+ $ = [0.1,0.4]$}
+%    \end{subfigure}
+%    \begin{subfigure}{0.4\textwidth}
+%        \includegraphics[width=\textwidth]{Figures/Stg1Sim/Data_Simulated_Joint_ASL0p3_0p5_0p8.jpg}
+%	\cprotect\caption{ \verb+Theta+ $ = 0.3$,  \verb+Theta+ $= [0.5,0.8]$}
+%    \end{subfigure}
+%    \caption{Asymmetric logistic dependence}\label{fig:ASL}
+%\end{figure}
+
+

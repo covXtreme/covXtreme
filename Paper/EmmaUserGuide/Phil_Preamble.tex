@@ -1,0 +1,86 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Phil's LaTeX preamble file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Itemise
+\newcommand{\pbi}{\begin{itemize}}
+\newcommand{\pei}{\end{itemize}}
+\newcommand{\pii}{\item}
+%Centre
+\newcommand{\pbc}{\begin{center}}
+\newcommand{\pec}{\end{center}}
+%Equation array
+\newcommand{\pbe}{\begin{eqnarray*}}
+\newcommand{\pee}{\end{eqnarray*}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Functions
+%Median over something
+\newcommand\med[1]{\underset{#1}{\mathrm{med}}}
+%Underline of something
+\newcommand{\un}[1]{\boldsymbol{#1}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Shortcut notation
+\let\hat=\widehat
+\let\geq=\geqslant
+\let\leq=\leqslant
+\providecommand{\Pr}{\mathbb{Pr}} %Probability
+\newcommand{\pms}{\quad}
+%approximately equal for large n
+\newcommand{\asseq}{\,\stackrel{{\rm \text{large } n}}{\approx}\,}
+%equality by definition
+\newcommand{\defeq}{\,\stackrel{{\rm \vartriangle}}{=}\,}
+%independently distributed
+\newcommand{\simindep}{\,\stackrel{{\rm indep}}{\sim}\,}
+%argmin
+\DeclareMathOperator*{\argmin}{arg\,\min}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Dot
+\providecommand{\Xd}{\dot{X}}
+\providecommand{\Yd}{\dot{Y}}
+\providecommand{\zd}{\dot{z}}
+\providecommand{\yd}{\dot{y}}
+\providecommand{\xd}{\dot{x}}
+\providecommand{\thetad}{\dot{\theta}}
+\providecommand{\phid}{\dot{\phi}}
+\providecommand{\nd}{{\dot{n}}}
+%Tilde
+\providecommand{\rhot}{\tilde{\rho}}
+\providecommand{\sigmat}{\tilde{\sigma}}
+\providecommand{\xit}{\tilde{\xi}}
+\providecommand{\ut}{{\tilde{u}}}
+\providecommand{\qt}{{\tilde{q}}}
+\providecommand{\Qt}{{\tilde{Q}}}
+\providecommand{\qb}{{\breve{q}}}
+\providecommand{\Qb}{{\breve{Q}}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Variable shortcuts for extremes work
+\providecommand{\cvr}{{\theta,\phi}}
+\providecommand{\cvrA}{{\theta \text{ and } \phi}}
+\providecommand{\prm}{{\psi,\rho,\xi \text{ and } \sigma}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Text layout
+%\onehalfspacing            %line spacing
+\setlength{\parindent}{0cm} %extent of text at end of paragraph
+\setlength{\parskip}{0em}   %length of gap following paragraph end (use \par to force new paragraph)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Page size
+%\oddsidemargin  -0.7in
+%\evensidemargin -0.7in
+%\textwidth      7.6in
+%\headheight     0.0in
+%\topmargin      -1.0in
+%\textheight     10.5in
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

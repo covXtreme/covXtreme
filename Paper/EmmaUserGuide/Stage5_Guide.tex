@@ -1,0 +1,98 @@
+Three approaches are used to estimate extreme contours using the marginal and H\&T models: constant exceedance; direct sampling (Huseby) and Heffernan \& Tawn density contours. These methods are described briefly below. The reader is directed to \cite{HslEA17} for an excellent recent review of contour methods, and \citep{RssOE19} who discuss best-practice in the application of contours. 
+
+%General comments re: coding approach:
+All the contours pass through a lock point, defined using the extreme quantile in $Y_1$ and the conditional median in $Y_j$ (for any $j \in \{2,\ldots,$D$\}$). To efficiently compute the contours, a new importance sampling method was written into the PPC software.
+
+The \textbf{Constant Exceedance Contour} preserves the observation count in the extremal set, as illustrated in Figure \ref{fig:Stg5_ExcDiagram}. The region of simultaneously extreme $Y_1$ and $Y_j$ is captured using a quadrant, this is of course arbitrary and many different shapes could be considered, e.g, tangent, half plane, etc. 
+\begin{itemize}
+\item Downside: convexity means contour will never come back on itself - pushing the upper part of the curve into a table top. The resulting curve is not very practical;
+\item Upside: definition is sound in the probabilistic sense, the other contour methods do not preserve probabilities in this way. From a risk point of view it can therefore be deemed to be robust.
+\end{itemize}
+
+The \noindent\textbf{Huseby Contour} is a convex contour based on the work of \cite{HsbEA15a}. This is similar to the constant exceedance contour except that a tangential set is used instead of the quadrant. The contour is computed in angular space around a centre point. Fast changing parts of the contour can come out `spiky' so we also apply a moving average to try to overcome some of these issues. 
+\begin{itemize}
+	\item Downside: The convexity doesn't behave well in multimodel cases or other cases where the data is non-convex;
+	\item Upside: A complete contour is produced - covering the full angular space around its centre point, not just the region with the largest responses. 
+\end{itemize}
+
+The \noindent\textbf{Hefferenan and Tawn density} contour is defined by gridding the data on the original scale and calculating the density of simulations in each bin, and then drawing the line which preserves the density of the bin containing the lock point. Figure \ref{fig:Stg5_EmpDnsDiagram} illustrates this method. The `omni' contour is computed as a weighted sum across the covariate-binned contours (weighted by rate of occurrence).
+\begin{itemize}
+\item Downside: the contour is non-invariant to transformations of variables;
+\item Upside: we get a contour which hugs the data in the way we might expect (without a table top, and without the extra roundness sometimes induced by the convexity assumption of the Huseby contour).
+\end{itemize}
+
+
+\subsection{Running Stage5}
+Marginal and conditional model parameters are loaded from Stage 3 and Stage 4 respectively.
+
+\textbf{Run Scripts}: \verb|Stage5_Contour.m|\\
+\textbf{Output files}: \verb|Output\Cnt.mat|\\
+
+\textbf{Inputs}:
+\begin{itemize}
+\item \verb|Mth| [string] cell array of contour methods to be used:
+	\begin{itemize}
+		\item \verb|Exc|: constant exceedance contour
+  		\item \verb|HTDns|: constant density contour on standard margins, uses density form of H\&T to get contour        
+  		\item \verb|Hus|: convex ``Direct Sampling'' contour of Huseby
+	\end{itemize}
+\item \verb|nSml| [scalar] number of simulations under H\&T model (upon which contours are estimated). May need to increase this when you have lots of bins, or see lack of smoothness in e.g. Huseby contour
+\end{itemize}
+
+\textbf{Output}: Contour structure \verb|Cnt|
+\begin{itemize}
+	\item \verb|Cnt.nPon| [scalar] how many points from which to draw contour
+	\item \verb|Cnt.Rng| [\verb|nPon| $ \times (K+1) \times R$] conditioned values for contour
+	\item \verb|Cnt.XY| [\verb|nMth| $ \times 1$] cell array for the contour lines. In case of Exc and Hus methods $XY(i)$ is [\verb|nPon| $\times 2 \times (B+1) \times R \times (D-1)$] defining contour lines in case of HTDns $XY(i)$ is a $[(B+1)\times R \times (D-1))]$ cell with sub-elements $[2 \times $ \verb|nPon|] defining the contour in this case \verb|nPon| varies for each contour bin, return period and associated variable. 
+	\item \verb|Cnt.Mth|  [\verb|nMth| $ \times 1$], (cell array) of contour methods used
+	\item \verb|Cnt.nMth|[scalar], number of contouring methods
+	\item \verb|Cnt.nBin|[scalar], number of covariate bins
+	\item \verb|Cnt.nLvl|[scalar], number of contour levels chosen
+	\item \verb|Cnt.nAsc|[scalar] number of associated variables
+	\item \verb|Cnt.Sml| structure importance sampled simulation under the model       
+	\item \verb|Cnt.LvlOrg| [$(B+1) \times R \times (D-1)$], contour level on original scale of conditioned variable (lock point)
+	
+\end{itemize}
+
+Figures \ref{fig:Stg5_Contour_1_Omni} and \ref{fig:Stg5_Contour_2_Binned_Tp} show comparisons of the 3 methods for the North Sea $T_P| H_S$ example. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/Tp_Hs_ByDrc/Figures/Stg5_Contour_1_Omni"}
+	\caption{Comparison of contour methods omni directionally. Contours are for 10 and 100 year return periods. Different methods are shown using coloured lines. The software currently does not support an omni HTDns method. The green circle shows the lock point at each probability level through which all the contour methods have to pass.}
+	\label{fig:Stg5_Contour_1_Omni}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{"./PPCGuideExamples/Tp_Hs_ByDrc/Figures/Stg5_Contour_2_Binned_Tp"}
+	\caption{Comparison of contour methods by directional sector. Contours are for 10 and 100 year return periods. Different methods are shown using coloured lines. The green circle shows the lock point at each probability level through which all the contour methods have to pass.}
+	\label{fig:Stg5_Contour_2_Binned_Tp}
+\end{figure}
+
+
+
+% ----------- Old diagrams
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{Figures/ExcDiagram}
+	\caption{Illustration of constant exceedance contour. Green lock point is defined using the extreme quantile in $Y_1$ and the conditional median in $Y_2$. The blue line is drawn such that, as $Y_1$ is decreased, the number of observations in the blue quadrant is preserved. The red line is drawn such that, as $Y_1$ decreases, the number of observations in the red quadrant is preserved.}
+	\label{fig:Stg5_ExcDiagram}
+\end{figure}
+
+
+%\begin{figure}[h]
+%	\centering
+%	\includegraphics[width=\textwidth]{Figures/RadQntDiagram}
+%	\caption{Illustration of radial quantile contour. Each radial bin has a different colour, the binned quantile estimate is then show with a black dot.}
+%	\label{fig:Stg5_RadQntDiagram}
+%\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{Figures/EmpDnsDiagram}
+	\caption{Illustration of empirical density contour. The coloured squares represent the observation counts per bin.}
+	\label{fig:Stg5_EmpDnsDiagram}
+\end{figure}
+
+\newpage
