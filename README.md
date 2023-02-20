@@ -15,11 +15,11 @@ More theoretical details of the model can be found in https://www.sciencedirect.
 
 ```text
 master
-├───
-├───GGHT
+├─── develop
 ```
 
 * `master` is the main branch of the code. 
+* `develop` is where any bug fixes and testing will take place.. 
 
 ## User guide
 
