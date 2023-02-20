@@ -34,7 +34,7 @@ If you require any more information, please contact ross.towe{at}.shell.com. Ple
 * Improving the fit of the Heffernan and Tawn model.
 
 ## Feedback
-This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). They are all a part of the MetOcean sede-x group on GitHub. 
+This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). 
 
 
 # Contributing to Piecewise_Covariate_Extremes
