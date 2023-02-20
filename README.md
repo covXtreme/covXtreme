@@ -19,7 +19,7 @@ master
 ```
 
 * `master` is the main branch of the code. 
-* `develop` is where any bug fixes and testing will take place.. 
+* `develop` is where any bug fixes and testing will take place.
 
 ## User guide
 
