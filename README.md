@@ -19,7 +19,7 @@ master
 ```
 
 * `master` is the main branch of the code. 
-* `develop` is where any bug fixes and testing will take place.. 
+* `develop` is where any bug fixes and testing will take place.
 
 ## User guide
 
@@ -35,3 +35,4 @@ If you require any more information, please contact ross.towe{at}.shell.com. Ple
 
 ## Feedback
 This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). 
+
