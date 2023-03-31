@@ -1,5 +1,5 @@
 
-# Piecewise_Covariate_Extremes - repository for the penalised piecewise constant covariate marginal and conditional extreme value models that allows for contour estimation
+# covXtreme - repository for the penalised piecewise constant covariate marginal and conditional extreme value models that allows for contour estimation
 
 ## Introduction
 
