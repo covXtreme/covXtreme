@@ -14,7 +14,7 @@ More theoretical details of the model can be found in https://www.sciencedirect.
 ## Repository overview
 
 ```text
-master
+main
 ├─── develop
 ```
 
