@@ -23,11 +23,11 @@ main
 
 ## User guide
 
-More details of the code can be found in the PCE_User_Guide pdf document: https://github.com/sede-x/Piecewise_Covariate_Extremes/blob/master/PCE_UserGuide.pdf.
+More details of the code can be found in the covXtreme user guide document.
 
 ## Contact
 
-If you require any more information, please contact ross.towe{at}.shell.com. Please include *Piecewise_Covariate_Extremes* in the subject of the email. 
+If you require any more information, please contact ross.towe{at}.shell.com. Please include *covXtreme* in the subject of the email. 
 
 ## Current status
 * Assessment of the environmental contours.
