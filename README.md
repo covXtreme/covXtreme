@@ -29,10 +29,6 @@ More details of the code can be found in the covXtreme user guide document.
 
 If you require any more information, please contact ross.towe{at}.shell.com. Please include *covXtreme* in the subject of the email. 
 
-## Current status
-* Assessment of the environmental contours.
-* Improving the fit of the Heffernan and Tawn model.
-
 ## Feedback
 This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). 
 
