@@ -1,10 +1,24 @@
+% Copyright 2023 covXtreme
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%      http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
 function Pi=CDFInterp1(Z,Zi,P)
-%Pi=CDFInterp(Z,P,Zi)
 %"next" neighbour interpolation for a CDF
-%Z should be sorted (n x 1)
-%P (optional) should be an (n x 1) linspace vector of probabilities.
-%Zi should be (p x q) set of place to interpolate onto
-%OUTPUT
+%% INPUTS
+%Z should be sorted [n x 1]
+%P (optional) should be an [n x 1] linspace vector of probabilities.
+%Zi should be [p x q] set of place to interpolate onto
+%% OUTPUTS
 % Pi p x q probabilities on [0,1] corresponing to Zi
 
 n=numel(Z);

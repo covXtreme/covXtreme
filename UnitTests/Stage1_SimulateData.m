@@ -8,6 +8,11 @@
 % Model has Generalised Pareto margins with constant shape parameter and
 % scale parameter which varies by covariate (directional) bin.
 
+%% Create figure directory
+if ~exist('Figures','dir')
+    mkdir('Figures')
+end
+
 %% Inputs 
 Mdl.nDmn= 2;  %number of dimensions/responses (currently 1D or 2D) 
 Mdl.nDat=400; % 2e6;  %number of observations to simulate
@@ -49,8 +54,8 @@ if Mdl.nDmn>1
             %Sig = [1,rho; rho,1];
             Mdl.Jnt.Rho=0.8;%[(0.5+(0.8.*(cos(2.*pi*[30:19:320]./360)+1)/2))/1.5];%[0.15:0.05:0.9];%[0.1 0.5 0.9];  %correlation on [0,1];
         case 'LGS' %logistic with single parameter alp on [0,1]
-            %Mdl.Jnt.Alp=[0.1,0.9,0.6,0.4]';%;%[0.15:0.05:0.9];
-            Mdl.Jnt.Alp=0.2;
+            Mdl.Jnt.Alp=[0.1,0.9,0.6,0.4];%;%[0.15:0.05:0.9];
+            %Mdl.Jnt.Alp=0.2';
             %periodic values of alpha that are  close to zero and 1 [(cos(2.*pi*[30:19:320]./360)+1)/2]
             %periodic values of alpha that are not as close to zero and 1 [(cos(2.*pi*[30:19:320]./360)+1.5)/3]
         case 'ASL' % Assymetric Logistic (misture of logistic and random)

@@ -1,7 +1,17 @@
 clear; clc; close all;
 addpath('../Code');
 
+%% Create figure directory
+if ~exist('Figures','dir')
+    mkdir('Figures')
+end
+
 load('CNS_mo_response')
+
+%% creating figure directory
+if ~exist('Figures','dir')
+    mkdir('Figures')
+end
 
 %% Parameters
 RspLbl={'maxPitch','Tp'}; %main and associated variable labels

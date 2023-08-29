@@ -1,15 +1,29 @@
+% Copyright 2023 covXtreme
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%      http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
 classdef Contour
     % Environmental contour class
     
     properties
-        XRng %nPnt x (nBin+1) x Cnt.nLvln, conditioned values for contour
-        XY; %nMth x 1 cell array
+        XRng %[nPnt x (nBin+1) x Cnt.nLvln], conditioned values for contour
+        XY; %[nMth x 1] cell array
         %In case of Exc and Hus
-        %XY{iMth} is (nPnt x 2 x (nBin+1)x Cnt.nLvl x Cnt.nAsc) defining contour lines
+        %XY{iMth} is [nPnt x 2 x (nBin+1)x Cnt.nLvl x Cnt.nAsc] defining contour lines
         % in case of HTDNs
-        %XY{iMth} is (nBin+1)x Cnt.nLvl x Cnt.nAsc) cell with sub-elements 2 x nPnt defining contour
+        %XY{iMth} is [(nBin+1)x Cnt.nLvl x Cnt.nAsc] cell with sub-elements [2 x nPnt] defining contour
         %in this case nPnt varies for each contour bin, return period and associated variable.
-        Mth;  %nMth x 1, (cell array) of contour methods used
+        Mth;  %[nMth x 1], (cell array) of contour methods used
         MthLabel; %Method label for plotting different contour methods
         nMth; %1 x 1, number of contouring methods
         nBin; %1 x 1, number of covariate bins
@@ -17,9 +31,9 @@ classdef Contour
         nAsc; %1 x 1 number of associated variables
         Sml; %structure importance sampled simulation under the model
         PltOn=false; %flag to switch on explanatory diagrams
-        LvlOrg; %(nBin+1) x nLvl x 2, contour level on orginal scale of conditioned variable
+        LvlOrg; %[(nBin+1) x nLvl x 2], contour level on orginal scale of conditioned variable
         nGrd; %Number of grid locations in each of x and y when x-y domain needs discretisation
-        nPnt; %1 x 1, how many points from which to draw contour
+        nPnt; %[1 x 1], how many points from which to draw contour
         SmtWdtC; %Smoothing width for the huseby contour C function
         BndWdtScl; %Band width scale for HTDns contour
         nSml; %Number of Simulations
@@ -30,12 +44,12 @@ classdef Contour
         function Cnt=Contour(HT,Mrg,OptCnt)
             % Contour CONSTRUCTOR function
             %
-            %INPUTS
-            % HT Hefferenan and Tawn class object
+            %% INPUTS
+            % HT Heffernan and Tawn class object
             % Mrg Marginal model class object
-            % OptCnt OPTions for CoNTour estimation class object
+            % OptCnt Options for Contour estimation class object
             %
-            %OUTPUT
+            %% OUTPUTS
             % Cnt Contours class object
             
             %% Check inputs
@@ -79,14 +93,14 @@ classdef Contour
         function Cnt = makeContours(Cnt,Mrg,HT,A,nA)
             % Estimate contours
             %
-            %INPUTS
+            %% INPUTS
             % Cnt Contours class containing settings/options for contours
             % Mrg Marginal model class output
             % HT  Heffernan and Tawn class output
             % A   bin Allocation vector
             % nA  nNumber of possible bin Allocations
             %
-            %OUTPUT
+            %% OUTPUTS
             % Cnt Contours class object
             
             if nargin<=3
@@ -98,19 +112,17 @@ classdef Contour
             if isempty(Cnt.LvlOrg)
                 Cnt=Cnt.GetLockPoint(HT);
             end
-            % # bins + omni
+            % bins + omni
             if nA>1
                 nBinsplsOmni = nA+1;
             else
                 nBinsplsOmni = 1;
             end
             
-            %% Get Contour levels from Marginal and Conditional analysis
-            
+            %% Get Contour levels from Marginal and Conditional analysis            
             Cnt.XRng=NaN(Cnt.nPnt,nBinsplsOmni, Cnt.nLvl);  %X range for contours
             
-            %% Compute lock point for each bin
-            
+            %% Compute lock point for each bin            
             %Initialise XVal
             for iBin=1:nBinsplsOmni
                 for iLvl=1:Cnt.nLvl
@@ -156,20 +168,21 @@ classdef Contour
         
         function Cnt=GetLockPoint(Cnt,HT)
             % Estimate lock point location
-            %
+            %% INPUTS 
             % Cnt Contours class containing settings/options for contours
             % HT  Heffernan and Tawn class output
-
+            %% OUTPUTS
+            % Cnt Contours class populated with the lock point
+            
             sOrig=HT.GetSummary('quantile',0.5);
             
-            %In PPC code contours just computed at the bin so nothing special needed
-            Cnt.LvlOrg= permute(sOrig,[1,3,2]);  %Mrg(1).RVMed; %range in X for contour on original scale
-            %
+            %Contours just computed at the bin
+            Cnt.LvlOrg= permute(sOrig,[1,3,2]);  %range in X for contour on original scale
         end %GetLockPoint
         
         function Cnt=Exceedence(Cnt,A,nA)
-            % Constant Exceedence probably contour
-            %
+            % Constant Exceedence probability contour
+            %% INPUTS
             % Cnt Contours class containing settings/options for contours
             % A   bin Allocation vector
             % nA  nNumber of possible bin Allocations
@@ -210,7 +223,8 @@ classdef Contour
                             logfogX = Cnt.Sml.logfog(:,1)+Cnt.Sml.W;
                             SmlY = Cnt.Sml.Org(:,iAsc+1);
                             logfogY = Cnt.Sml.logfog(:,iAsc+1);
-                        else     %pick out simulations from each bin in turn
+                        else
+                            %pick out simulations from each bin in turn
                             if ~any(A==iB)
                                 continue
                             end
@@ -243,8 +257,8 @@ classdef Contour
                             if any(I_x)
                                 P_ygx(:,iG) = Cnt.WeightedCDF(y_grd,SmlY(I_x),fog(I_x));
                             end
-                            %                             tP_ygx = sum((y_grd>SmlY(I_x)').*fog(I_x)',2)./sum(fog(I_x));
-                        end
+                            
+                        end %iG
                         
                         % find y_Dw closest to this probability level
                         tJnt=(P_ygx).*(1-P_x'); %joint Prb(Y>y,X>x) for a sequence of values of x
@@ -254,15 +268,15 @@ classdef Contour
                         tJnt=(1-P_ygx).*(1-P_x'); %joint Prb(Y<=y,X>x) for a sequence of values of x
                         YUp(:,iAsc)=Cnt.exceedanceSmooth(tJnt,y_grd,p_Loc_Up); % using linear interpolation (produces smoother output)
                         
-                    end
+                    end %iAsc
                     
                     %store the 2 parts of the contour (up and down) together
                     for iAsc=1:Cnt.nAsc
-                        Cnt.XY{IMth}(:,2,iB,iQ,iAsc) = [permute(YDw(:,iAsc),[1,3,4,5,2]);flipud(permute(YUp(:,iAsc),[1,3,4,5,2]))]; %TO FINISH: last dimention is Associated
-                        Cnt.XY{IMth}(:,1,iB,iQ,iAsc) = [Cnt.XRng(:,iB,iQ);flipud(Cnt.XRng(:,iB,iQ))];  %what should X be??
-                    end
-                end
-            end
+                        Cnt.XY{IMth}(:,2,iB,iQ,iAsc) = [permute(YDw(:,iAsc),[1,3,4,5,2]);flipud(permute(YUp(:,iAsc),[1,3,4,5,2]))]; % last dimention is Associated
+                        Cnt.XY{IMth}(:,1,iB,iQ,iAsc) = [Cnt.XRng(:,iB,iQ);flipud(Cnt.XRng(:,iB,iQ))]; 
+                    end %iAsc
+                end %iB
+            end %iQ
             fprintf('\n');
             
             
@@ -292,9 +306,9 @@ classdef Contour
         end %Exceedence
         
         function Cnt=HTDensity(Cnt,A,nA)
-            % Cnt=HTDensity(Cnt,Mrg)
             % Contours of constant HT density
             %
+            %% INPUTS
             % Cnt Contours class containing settings/options for contours
             % A   bin Allocation vector
             % nA  nNumber of possible bin Allocations
@@ -404,7 +418,7 @@ classdef Contour
                         else
                             Cnt.XY{IMth}{iBin,iLvl,iAsc}=[Cnt.XY{IMth}{iBin,iLvl,iAsc},[NaN;NaN],C(:,tI)];
                         end
-                    end
+                    end %i
                 end %iBin
             end%iAsc
             fprintf('\n');
@@ -415,6 +429,7 @@ classdef Contour
         function Cnt=HusebyContour(Cnt,A,nA)
             % Drawing Huseby contours from a bivariate sample
             %
+            %% INPUTS
             % Cnt Contours class containing settings/options for contours
             % A   bin Allocation vector
             % nA  nNumber of possible bin Allocations
@@ -438,7 +453,6 @@ classdef Contour
             
             % set of angles for contour eval.
             angles = linspace(-pi,pi,Cnt.nPnt); %set of angles
-            
             
             % loop over associated variables
             for iAsc = 1:Cnt.nAsc
@@ -467,19 +481,14 @@ classdef Contour
                     % Cov[X]
                     Cov_X = (x(IGood,:)-E_X')'*(fog(IGood).*(x(IGood,:)-E_X'))./sum(fog(IGood));
                     % chol(Cov[X])
-                    cholCov_X = cholcov(Cov_X);
-                    
-                    % Z = \Sig^{-1/2}*(x-\mu)
+                    cholCov_X = cholcov(Cov_X);                   
                     z = (x-E_X')/cholCov_X;
                     
                     % compute prob. associated with lock point
                     IGd=find(~isnan(Cnt.LvlOrg(iBin,:,1)) & Cnt.LvlOrg(iBin,:,1)>E_X(1));
                     
-                    %TODO use Cnt.WeightedCDF here!!
                     p_c = sum(bsxfun(@gt,x(:,1),Cnt.LvlOrg(iBin,IGd,1)).*fog,1)./sum(fog,1);
-                    
-                    %k = floor(size(x,1)*(1-pf)); %number of points above probiblity level?
-                    
+                                       
                     % set up knots for the IS density
                     Z_knt = linspace(min(z(:))-1e-2,max(z(:))+1e-2,20000)';
                     
@@ -490,14 +499,12 @@ classdef Contour
                         % X_p = c*X
                         Z_p = z(:,1)*cos(angles(iAng)) + z(:,2)*sin(angles(iAng));
                         % Compute importance sampled density
-                        %P_Zp = sum((Z_knt<=Z_p').*fog',2)./sum(fog);
                         P_Zp = 1-Cnt.WeightedCDF(Z_knt,Z_p,fog);
-                        %                         old_P_Zp = 1-sum((Z_knt>Z_p').*fog',2)./sum(fog);
                         % find closest point to req. probability
                         [~,I_min] = min(abs(P_Zp-p_c),[],1);
                         % get C(\theta)
                         C_theta(iAng,:) = Z_knt(I_min);
-                    end
+                    end %iAng
                     C_theta=movmean(C_theta,5); %smooth Huseby to get rid of 'spikey corners'
                     
                     %% Calculate the intersection points
@@ -513,12 +520,10 @@ classdef Contour
                                 (sin(angles(iAng+1))*cos(angles(iAng))-sin(angles(iAng))*cos(angles(iAng+1)));
                             % transform back to original scale
                             Cnt.XY{IMth}(iAng,:,iBin,IGd(iRtr),iAsc) = tXY*cholCov_X + E_X';
-                            %Cnt.XY{IMth}(iAng,:,iBin,iRtr,iAsc) = tXY + E_X';
-                        end
-                    end
-                    %                     Cnt.XY{IMth}(end,:,iBin,:,iAsc) = Cnt.XY{IMth}(1,:,iBin,:,iAsc); %final point is start of contour again
-                    
-                end %loop over bins
+
+                        end %iAng
+                    end %iRtr
+                end %iBin loop over bins
                 
             end %loop over associated variables
             fprintf('\n')
@@ -528,9 +533,10 @@ classdef Contour
         function Cnt=HusebyContourCleaned(Cnt,A,nA)
             %Huseby cleaned contours
             %
-            % Cnt  contour object
-            % A    optional alternative bin allocation vector
-            % nA integer scalar : largest value bin indicator (might be larger than largest value in A, if there are empty bins)
+            %% INPUTS
+            % Cnt contour object
+            % A   optional alternative bin allocation vector
+            % nA  integer scalar : largest value bin indicator (might be larger than largest value in A, if there are empty bins)
             
             %Use existing covariate bins if non specified
             if nargin<=1
@@ -585,7 +591,6 @@ classdef Contour
                     Cov_X = (x(IGood,:)-E_X')'*(fog(IGood).*(x(IGood,:)-E_X'))./sum(fog(IGood));
                     % chol(Cov[X])
                     cholCov_X = cholcov(Cov_X);
-                    % Z = \Sig^{-1/2}*(x-\mu)
                     z = (x-E_X')/cholCov_X;
                                         
                     %% Compute probability associated with lock point
@@ -600,16 +605,14 @@ classdef Contour
                     %% Calculate the Huseby et al. function C_theta
                     C_theta=NaN(Cnt.nPnt, numel(p_c));
                     for iAng=1:length(angles)
-                        % X_p = c*X
                         Z_p = z(:,1)*cos(angles(iAng)) + z(:,2)*sin(angles(iAng));
                         % Compute importance sampled density
-                        %P_Zp = sum((Z_knt<=Z_p').*fog',2)./sum(fog);
                         P_Zp = 1-Cnt.WeightedCDF(Z_knt,Z_p,fog);
                         % find closest point to req. probability
                         [~,I_min] = min(abs(P_Zp-p_c),[],1);
                         % get C(\theta)
                         C_theta(iAng,:) = Z_knt(I_min);
-                    end
+                    end %iAng
                     
                     %% Apply a moving median smoother
                     C_theta=movmean(C_theta,Cnt.SmtWdtC); %smooth Huseby to get rid of 'spikey corners'
@@ -630,9 +633,8 @@ classdef Contour
                             tXY(2) = (-cos(angles(iAng+1))*C_theta(iAng, iRtr)+cos(angles(iAng))*C_theta(iAng+1, iRtr))./...
                                 (sin(angles(iAng+1))*cos(angles(iAng))-sin(angles(iAng))*cos(angles(iAng+1)));
                             % transform back to original scale
-                            %Cnt.XY{IMth}(iAng,:,iBin,IGd(iRtr),iAsc) = tXY;
                             Cnt.XY{IMth}(iAng,:,iBin,IGd(iRtr),iAsc) = tXY*cholCov_X + E_X';
-                        end
+                        end %iAng
                         
                         %% Call to CleanHuseby
                         % The original Huseby contour contains uninteresting "bow ties"
@@ -640,16 +642,19 @@ classdef Contour
                         % following NaN
                         Cnt.XY{IMth}(:,:,iBin,IGd(iRtr),iAsc)=Cnt.CleanHuseby(Cnt.XY{IMth}(:,:,iBin,IGd(iRtr),iAsc));    
 
-                    end %loop over return periods
+                    end %iRtr loop over return periods
                     
-                end %loop over bins
+                end %iBin loop over bins
                 
-            end %loop over associated variables
+            end %iAsc loop over associated variables
             fprintf('\n');
             
         end % HusebyContourCleaned
         
         function Plot(Cnt,Mrg)
+            
+            %Use different line styles to distinguish return periods
+            LinStl={'-';'--';'-.';':'};
             
             %% plot omni contour
             figure(1);
@@ -660,30 +665,35 @@ classdef Contour
                 plot(Mrg(1).Y,Mrg(iAsc+1).Y,'k.','markersize',10,'handlevisibility','off')
                 hold on
                 grid on
+                box on
                 
-                xlabel(sprintf('%s: Conditioned variable',Mrg(1).RspLbl))
-                ylabel(sprintf('%s: Conditioning variable',Mrg(iAsc+1).RspLbl))
+                xlabel(sprintf('%s: Conditioning',Mrg(1).RspLbl))
+                ylabel(sprintf('%s: Conditioned',Mrg(iAsc+1).RspLbl))
                 C=lines(Cnt.nMth);
                 
                 for iQ=1:Cnt.nLvl %return period
+                    if iQ<=4
+                        tLS=LinStl{iQ};
+                    else
+                        tLS='-';
+                    end
                     for iCnt=1:Cnt.nMth  %method
                         %General plotting code:
                         if strcmp(Cnt.Mth(iCnt),'HTDns')
                             if any(Cnt.XY{iCnt}{end,iQ,iAsc}(:))
-                                plot(Cnt.XY{iCnt}{end,iQ,iAsc}(1,:),Cnt.XY{iCnt}{end,iQ,iAsc}(2,:),'-','color',C(iCnt,:),'linewidth',2);
+                                plot(Cnt.XY{iCnt}{end,iQ,iAsc}(1,:),Cnt.XY{iCnt}{end,iQ,iAsc}(2,:),'linestyle',tLS,'color',C(iCnt,:),'linewidth',2);
                                 hold on
                             end
                         else
-                            plot(Cnt.XY{iCnt}(:,1,end,iQ,iAsc),Cnt.XY{iCnt}(:,2,end,iQ,iAsc),'-','color',C(iCnt,:),'linewidth',2);
+                            plot(Cnt.XY{iCnt}(:,1,end,iQ,iAsc),Cnt.XY{iCnt}(:,2,end,iQ,iAsc),'linestyle',tLS,'color',C(iCnt,:),'linewidth',2);
                             hold on
                         end
-                    end
+                    end %iCnt
                     plot(Cnt.LvlOrg(end,:,1),Cnt.LvlOrg(end,:,iAsc+1),'go','markersize',8, 'LineWidth',2);
-                end
+                end %iQ
                 
-                title(sprintf('%s|%s: Omni directional contour',Mrg(iAsc+1).RspLbl,Mrg(1).RspLbl))
+                title(sprintf('%s|%s: Omni-covariate',Mrg(iAsc+1).RspLbl,Mrg(1).RspLbl))
                 legend(Cnt.Mth,'location','best')
-                % xlim([min(Mrg(1).Y),max(Mrg(1).Y)])
             end
             
             savePics('Figures/Stg5_Contour_1_Omni');
@@ -702,26 +712,32 @@ classdef Contour
                         subplot(nPlt2,nPlt1,iBin)
                         hold on
                         grid on
+                        box on
                         J=Mrg(1).Bn.A==iBin;
                         plot(Mrg(1).Y(J),Mrg(iAsc+1).Y(J),'k.','markersize',10,'handlevisibility','off')
-                        xlabel(sprintf('%s: Conditioned',Mrg(1).RspLbl))
-                        ylabel(sprintf('%s: Conditioning',Mrg(iAsc+1).RspLbl))
+                        xlabel(sprintf('%s: Conditioning',Mrg(1).RspLbl))
+                        ylabel(sprintf('%s: Conditioned',Mrg(iAsc+1).RspLbl))
                         C=lines(Cnt.nMth);
                         
                         for iQ=1:Cnt.nLvl %return period
+                            if iQ<=4
+                                tLS=LinStl{iQ};
+                            else
+                                tLS='-';
+                            end
                             for iCnt=1:Cnt.nMth %method
                                 if strcmp(Cnt.Mth(iCnt),'HTDns')
                                     if any(Cnt.XY{iCnt}{iBin,iQ,iAsc}(:))
-                                        plot(Cnt.XY{iCnt}{iBin,iQ,iAsc}(1,:),Cnt.XY{iCnt}{iBin,iQ,iAsc}(2,:),'-','color',C(iCnt,:),'linewidth',2);
+                                        plot(Cnt.XY{iCnt}{iBin,iQ,iAsc}(1,:),Cnt.XY{iCnt}{iBin,iQ,iAsc}(2,:),'linestyle',tLS,'color',C(iCnt,:),'linewidth',2);
                                         hold on
                                     end
                                 else
-                                    plot(Cnt.XY{iCnt}(:,1,iBin,iQ,iAsc),Cnt.XY{iCnt}(1:end,2,iBin,iQ,iAsc),'color',C(iCnt,:),'linewidth',2);
+                                    plot(Cnt.XY{iCnt}(:,1,iBin,iQ,iAsc),Cnt.XY{iCnt}(1:end,2,iBin,iQ,iAsc),'linestyle',tLS,'color',C(iCnt,:),'linewidth',2);
                                     hold on
                                 end
-                            end
+                            end %iCnt
                             
-                        end
+                        end %IQ
                         plot(Cnt.LvlOrg(iBin,:,1),Cnt.LvlOrg(iBin,:,iAsc+1),'go','markersize',8, 'LineWidth',2);  %BUG: NaN in Cnt.LvlOrg(iBin,:,iAsc+1)
                         
                         if iBin==1
@@ -731,9 +747,9 @@ classdef Contour
                             title(sprintf('Bin %s',Mrg(1).Bn.BinLbl{iBin}))
                         end
                         
-                    end
+                    end %iBin
                     savePics(sprintf('Figures/Stg5_Contour_2_Binned_%s',Mrg(iAsc+1).RspLbl));
-                end
+                end %iAsc
             end
             
         end %plot
@@ -747,21 +763,18 @@ classdef Contour
             %
             % P(X<=x) = int (X<=Y).*W  over samples
             %
-            %INPUT
+            %% INPUTS
             %X  nX x Sz(1) x Sz(2)  which points to compute CDF at
             %Y: nRls x Sz(1) x Sz(2)  observations to derive CDF for
             %W: nRls x Sz(1) x Sz(2)  weights to use in compute cdf. (importance weights)
             %q: [nQ x 1]  also provide quantile levels to compute
             %
             % Sz need to match for binary singleton expansion
-            %OUTPUT
+            %% OUTPUTS
             % P = probabilities  nX x Sz(1) x Sz(2)
             % Yq = quantiles of data.
             %
-            %Reference https://en.wikipedia.org/wiki/Importance_sampling
-            %
-            % David Randell Feb 2019;%
-            
+            %Reference https://en.wikipedia.org/wiki/Importance_sampling           
             
             %% Input defaults
             %interpolate knots
@@ -791,7 +804,7 @@ classdef Contour
             Sz(1:(numel(SzY)-1))=SzY(2:end);
             for i=2:numel(SzX)
                 Sz(i-1)=max(Sz(i-1),SzX(i));
-            end
+            end %i
             if W_On
                 SzW=size(W);
                 for i=2:numel(SzW)
@@ -808,17 +821,17 @@ classdef Contour
             end
             %% Sort data
             [~,I]=sort([X;Y],1); %place together edge vector with data and sort
-            Ijoint=I+(nX+nRls).*(0:SzOther-1); %2D index (aviods sub2ind)
+            Ijoint=I+(nX+nRls).*(0:SzOther-1); %2D index
             IndEdg=ismember(I,(1:nX)'); %edge index where the edges lie in sorted matrix
             
             if W_On
-                sW=[zeros(nX,SzOther);W]; %compute integral for all weights use zero weight for edges!!
+                sW=[zeros(nX,SzOther);W]; %compute integral for all weights use zero weight for edges
             else
                 sW=[zeros(nX,SzOther);ones(nRls,SzOther)];
             end
-            cW=cumsum(sW(Ijoint),1); %sum weights to give integral at the data.
+            cW=cumsum(sW(Ijoint),1); %sum weights to give integral at the data
             P=reshape(cW(IndEdg),nX,SzOther)./cW(end,:); %pull out integral at bin edges and renormalise
-            P(:,cW(end,:)==0)=1; %bad case
+            P(:,cW(end,:)==0)=1; %deal with bad cases
             
             P=reshape(P,[nX,Sz]);
             
@@ -828,15 +841,15 @@ classdef Contour
         end %WeightedCDF
 
         function XNew=CleanHuseby(XOld)
-            % function X=CleanHuseby(XOld);
-            %
             % Clean up Huseby contours around "cusps"
             %
             % Algorithm works by searching for and eliminating points that cannot be
             % accessed from the contour median without crossing a line segment (between
             % adjacent points on the contour)
-            %
-            % Philip Jonathan 20221103
+            %% INPUTS
+            % XOld uncleaned Huseby contour
+            %% OUTPUTS
+            % Xnew cleaned Huseby contour
             
             % Test mode
             if nargin==0
@@ -849,7 +862,7 @@ classdef Contour
             X=XOld(sum(~isnan(XOld),2)==2,:);
             nX=size(X,1);
             
-            % Kep is an indicator to good points (to KEeP)
+            % Kep is an indicator to good points (to keep)
             Kep=ones(nX,1);
             nKep=sum(Kep);
             for iX=1:nX
@@ -863,7 +876,7 @@ classdef Contour
                     break;
                 end
                 
-            end
+            end %iX
             
             % Return the cleaned contour, padded with NaN if necessary
             XNew=nan(size(XOld,1),2);
@@ -886,9 +899,7 @@ classdef Contour
             % - we check whether this line intersects any line segment connecting two consecutive 
             %   points on the contour
             % - if an intersection is found, the point identified is a "bow-tie" point
-            %   and should be dropped
-            %
-            % Philip Jonathan 20221109
+           
             
             % Set verbose mode
             Vrb=0;
@@ -909,7 +920,7 @@ classdef Contour
                 else
                     Dlt(nX,:)=[X(1,1)-X(nX,1) X(1,2)-X(nX,2)];
                 end
-            end
+            end %iX
             
             % Define an origin
             Org=mean(X)';
@@ -942,7 +953,7 @@ classdef Contour
                     if jX~=iX-1 && jX~=iX % Cannot match with self
                         tPrm(jX,:)=[-D(1) C(1);-D(2) C(2)]\A; % This solves for the intersection between two vectors
                     end
-                end
+                end %jX
                 % Find any line segments that make the point a valid point to drop
                 if sum(tPrm(:,1)>0 & tPrm(:,1)<1 & tPrm(:,2)>0 & tPrm(:,2)<1)>0
                     t=find(tPrm(:,1)>0 & tPrm(:,1)<=1 & tPrm(:,2)>0 & tPrm(:,2)<1);
@@ -958,27 +969,28 @@ classdef Contour
                     break;
                 end
                 
-            end
+            end %iX
             
         end %CleanHusebyDropOne
         
         function Yq=exceedanceSmooth(X,Y,Xq)
             % Smooth the exceedance contour
-            %
-            % X:    X locations, possibly with repeated values (ie values are not unique)  
-            % Y:    Y locations corresponding to Y
-            % Xq:   Points at which interpolated value is desired
+            %% INPUTS
+            % X    X locations, possibly with repeated values (ie values are not unique)  
+            % Y    Y locations corresponding to Y
+            % Xq   Points at which interpolated value is desired
+            % Yq:  Interpolated values 
             Yq=nan(size(X,2),1);
             for ti=1:size(X,2)
                 [tX,iIndUnq]=unique(X(:,ti),'last');
                 tY=Y(iIndUnq);
                 t2Y=interp1(tX,tY,Xq);
                 Yq(ti)=t2Y;
-            end
-        end
+            end %ti
+        end %exceedanceSmooth
         
     end %methods (Static)
     
-end %end class
+end %end class Contour
 
 

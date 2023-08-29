@@ -1,16 +1,30 @@
+% Copyright 2023 covXtreme
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%      http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
 function F=rndasymlgs(alp,theta,nD,n)
 %generate random values from nD dimension asymmetric logistic function with
-%frechet margins
+%Frechet margins
 %
-%Alogirthm 2.1 Alec Stephenson, "Simulting Multivariate Extreme Value
+%Algorithm 2.1 Alec Stephenson, "Simulating Multivariate Extreme Value
 %Distributions of Logistic Type", Extremes 6, 49-59, 2003
-
-%INPUT
+%
+%% INPUTS
 %alp   : dependency parameter
 %theta : weighting parameter
 %nD    : is number of dimesions
 %n     : the number of realisations
-%OUTPUT
+%% OUTPUTS
 %F random valeus
 
 %find all sets
@@ -24,7 +38,7 @@ for iD=1:nD
         B(jD+C,1:iD)=t1(jD,:);
     end
     C=C+size(t1,1);
-end
+end %iD
 %-------------------------------------------------------------------------
 %generate symmetric values
 Z=cell(nB,1);
@@ -35,7 +49,7 @@ for b=1:nB
     else
         Z{b}=rndsymlgs(alp(b),nD,n);
     end        
-end
+end %b
 %-------------------------------------------------------------------------
 %find max over sets for assymetric values
 F=NaN(nD,n);
@@ -46,5 +60,5 @@ for iD=1:nD
     for iB=2:length(I)
         tI=find(B(I(iB),:)==iD);
         F(iD,:)=max(F(iD,:),theta{I(iB)}(tI).*Z{I(iB)}(tI,:));
-    end
-end
+    end %iB
+end %iD

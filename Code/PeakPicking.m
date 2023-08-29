@@ -1,16 +1,31 @@
+% Copyright 2023 covXtreme
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%      http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
 function Dat=PeakPicking(Rsp,Cvr,Asc,IsPrd,NEP,RspLbl,CvrLbl)
 %function [YPk,XAss]=PeakPickingY,X,NEP);
-%INPUT
-% Rsp     n x 1 vector of main response 
-% Cvr     n x nCvr matrix of covariates (e.g. direction, season)
-% Asc     n x nAsc matrix of other associated variables 
-% IsPrd   nCvr x 1 (boolean) vector flag for if covairate is periodic
-% NEP     1 x 1 quantile level used to find threshold
-% RspLbl  nAsc+1 x 1 cell arrray of labels for the response (first) and the associated  variables
-% CvrLbl  nCvr x 1  cell arrray of labels for the covariates
-%Output
-% Dat.Y  nPk x (1+nAsc) vector of data with main response first
-% Dat.X  nPk x 1 vector of covariate (direction) data 
+%% INPUTS
+% Rsp     [n x 1] vector of main response 
+% Cvr     [n x nCvr] matrix of covariates (e.g. direction, season)
+% Asc     [n x nAsc] matrix of other associated variables 
+% IsPrd   [nCvr x 1] (boolean) vector flag for if covariate is periodic
+% NEP     [1 x 1] quantile level used to find threshold
+% RspLbl  [nAsc+1 x 1] cell arrray of labels for the response (first) and the associated  variables
+% CvrLbl  [nCvr x 1]  cell arrray of labels for the covariates
+%% OUTPUTS
+% Dat Peak picked data set
+% Dat.Y  [nPk x (1+nAsc)] vector of data with main response first
+% Dat.X  [nPk x 1] vector of covariate (direction) data 
 
 validateattributes(Rsp, {'numeric'},{'vector'},'PeakPick','Y',1);
 n=numel(Rsp);  %number of observations
@@ -18,7 +33,7 @@ validateattributes(Cvr, {'numeric'},{'nrows',n},'PeakPick','Thet',2);
 nCvr=size(Cvr,2);
 validateattributes(Asc, {'numeric'},{'nrows',n},'PeakPick','Asc',3);
 validateattributes(IsPrd, {'numeric','logical'},{'numel',nCvr,'integer'},'PeakPick','IsPrd',4);
-nAsc=size(Asc,2); %number of assoicated variables
+nAsc=size(Asc,2); %number of associated variables
 validateattributes(NEP, {'numeric'},{'scalar','>=',0,'<=',1},'PeakPick','NEP',5);
 validateattributes(RspLbl, {'cell'},{'numel',nAsc+1},'PeakPick','RspLbl',6);
 validateattributes(CvrLbl, {'cell'},{'numel',nCvr},'PeakPick','CvrLbl',7);
@@ -58,7 +73,7 @@ AscExc=Asc(IExc,:);
 %% find storm peak maximum index
 maxInd=accumarray(Ind,RspExc,[],@findmax,NaN); %index of maxima within storm
 SSCnt=accumarray(Ind,Ind,[],@numel,NaN); %sea state count per storm
-cmSSCnt=[0;cumsum(SSCnt(1:end-1))];
+cmSSCnt=[0;cumsum(SSCnt(1:end-1))];%cumulative sea state count per storm
 maxIndOrg=maxInd+cmSSCnt; %index of maxima within exceedences
 
 %% Populate output vector
@@ -66,17 +81,17 @@ Dat.Y=NaN(nExc,1+nAsc); %Initialise empty response matrix
 Dat.Y(:,1)=RspExc(maxIndOrg); %maxima within storm
 Dat.Y(:,2:end)=AscExc(maxIndOrg,:); %value of associated response @ maxima
 Dat.X=CvrExc(maxIndOrg,:);  %value of covariate (direction) @ maxima
-Dat.RspLbl=RspLbl; %reponse label
+Dat.RspLbl=RspLbl; %response label
 Dat.CvrLbl=CvrLbl; %covariate label
 Dat.IsPrd=IsPrd;  %periodic covariate flag
 
 nDmn=size(Dat.Y,2);
-%% Plot 
-%% marginal
+%% Plotting
+%% creation of the figure directory
 if ~exist('Figures','dir')
    mkdir('Figures') 
 end
-
+%% marginal plot
 figure(1);
 clf;
 c=0;
@@ -98,11 +113,11 @@ for i=1:nDmn
             set(gca,'xtick',0:45:360,'xlim',[0,360])
         end
         ylabel(RspLbl{i})
-    end
-end
+    end %iC
+end %i
 savePics('Figures/Stg1_Data_Margins')
 
-%% joint
+%% joint plot
 if nDmn>1
     figure(2);
     clf;   

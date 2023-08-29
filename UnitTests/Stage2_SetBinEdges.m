@@ -6,7 +6,7 @@ clear; clc; close all;
 load('Output/Data','Dat')
 
 %%Choose bins cell array ones for each covariate dimension
-BinEdg={[0]'}; %NB. Must be suitable for both Margins if nMarg > 1
+BinEdg={[0,180]'}; %NB. Must be suitable for both Margins if nMarg > 1
 
 
 %% Allocate Data to Bins and Plot

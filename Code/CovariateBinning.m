@@ -1,62 +1,76 @@
+% Copyright 2023 covXtreme
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+% 
+%      http://www.apache.org/licenses/LICENSE-2.0
+% 
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
 classdef CovariateBinning
     %Allocate data to covariate bins
-    %Input
+    %% INPUTS
     % Dat
-    %    X n x nCvr covariate values (periodic covairates must be on on 0,360)
-    %    Edg  cell array nCvr x 1  Covaraite Bin edges [0,360]; periodic bins will wrap around 0 degrees
-    %    IsPrd nCvr x 1 vector if covairte is periodic or not
-    %Optional used for plotting
-    %    Y n x nDmn responses
+    %    X [n x nCvr] covariate values (periodic covairates must be on on 0,360)
+    %    Edg  cell array [nCvr x 1]  Covaraite Bin edges [0,360]; periodic bins will wrap around 0 degrees
+    %    IsPrd [nCvr x 1] vector if covairte is periodic or not
+    %% OPTIONAL INPUTS USED cFOR PLOTTING
+    %    Y [n x nDmn] responses
     %    RspLbl  cell array of reponse variable labels
     %    CvrLbl  cell array of covariate variable labels
-    
-    properties
-        nCvr      %1 x 1      number of covariates
-        n         %1 x 1      number of observations
-        nBin      %1 x 1      total nunber of covariate bins
-        nBinCvr   %nCvr x 1, number of covariate bins in each covariate
-        Edg       %nCvr x 1   cell array Covaraite Bin edges [0,360]; periodic bins will wrap around 0 degrees        
-        A         %n x 1      bin allocation of each observation to a bin
-        Cnt       %nBin x 1   number of observations per bin
-        BinLbl    %nBin x 1   Bin label
-    end
-    properties (Hidden=true)
-        LeftEdge   %nBin x nCvr Center of each bin
-        Length     %nBin x nCvr Length of each bin
-        EdgExd     %Extended padded with [0,360]
-        IsPrd      %nCvr x 1,        
-        APrj       %nBin x nCrv Index matrix to go from full nBin x nDrc matrix over all covariates to indiviual covariate
-        RspLbl     %nRsp x 1 response label (used in plotting)
-        CvrLbl     %nCvr x 1 covariate label (used in plotting)
-    end %properties
-    
-    %Output
+    %% OUTPUTS
     %    A  n x 1 bin allocation
     %    Plot of bin edges on data
     
+    properties
+        nCvr      %[1 x 1]      number of covariates
+        n         %[1 x 1]      number of observations
+        nBin      %[1 x 1]      total nunber of covariate bins
+        nBinCvr   %[nCvr x 1]  number of covariate bins in each covariate
+        Edg       %[nCvr x 1]   cell array Covaraite Bin edges [0,360]; periodic bins will wrap around 0 degrees        
+        A         %[n x 1]      bin allocation of each observation to a bin
+        Cnt       %[nBin x 1]   number of observations per bin
+        BinLbl    %[nBin x 1]   Bin label
+    end %properties
+    
+    properties (Hidden=true)
+        LeftEdge   %[nBin x nCvr] Center of each bin
+        Length     %[nBin x nCvr] Length of each bin
+        EdgExd     %Extended padded with [0,360]
+        IsPrd      %[nCvr x 1] logical of whether the covariate periodic        
+        APrj       %[nBin x nCrv] Index matrix to go from full nBin x nDrc matrix over all covariates to indiviual covariate
+        RspLbl     %[nRsp x 1] response label (used in plotting)
+        CvrLbl     %[nCvr x 1] covariate label (used in plotting)
+    end %properties(hidden)
+        
     methods %methods
         
         function Bn=CovariateBinning(X,Edg,IsPrd,Y,RspLbl,CvrLbl)
             %Allocate data to covariate bins
-            %Input
+            %% INPUTS
             % Dat
-            %    X n x nCvr covariate values (periodic covairates must be on on 0,360)
-            %    Edg  cell array nCvr x 1  Covariate Bin edges [0,360]; periodic bins will wrap around 0 degrees
-            %    IsPrd nCvr x 1 vector if covairte is periodic or not
+            %    X [n x nCvr] covariate values (periodic covairates must be on on 0,360)
+            %    Edg  cell array [nCvr x 1]  Covariate Bin edges [0,360]; periodic bins will wrap around 0 degrees
+            %    IsPrd [nCvr x 1] vector if covairte is periodic or not
             %Optional used for plotting
-            %    Y n x nDmn responses
+            %    Y [n x nDmn] responses
             %    RspLbl  cell array of reponse variable labels
             %    CvrLbl  cell array of covariate variable labels
-            
-            %Output
-            %    Bin n x 1 bin allocation
+            %% OUTPUTS
+            %    Bn [n x 1] bin allocation
             %    Plot of bin edges on data
+            
             if nargin==0
                return 
             end
             %% Input Check
             [Bn.n,Bn.nCvr]=size(X); %number of covariates
-            
+            % validation of attributes 
             validateattributes(Edg,{'cell'},{'numel',Bn.nCvr},'BinAllocation','Edg',2);
             Bn.Edg=Edg;
             validateattributes(IsPrd,{'numeric','logical'},{'numel',Bn.nCvr,'integer'},'BinAllocation','IsPrd',3);
@@ -73,11 +87,14 @@ classdef CovariateBinning
             
             %% Plot bins
             PlotBins(Bn,X,Y)
-        end %bin allocation
+        end %CovariateBinning
         
         function Bn=BinAllocation(Bn,X)
             %% Loop over covariates and bin in each dimension
-            
+            %% INPUTS
+            %    Bn [n x 1] bin allocation
+            %% OUTPUTS
+            %    Bn populated Bn object
             Bn.nBinCvr=NaN(Bn.nCvr,1); %number of bins
             ADmn=NaN(Bn.n, Bn.nCvr);  %bin allocation for each dimension
             for iC=1:Bn.nCvr %loop over covariates
@@ -112,14 +129,14 @@ classdef CovariateBinning
                 if Bn.IsPrd(iC)
                     ADmn(ADmn(:,iC)==Bn.nBinCvr(iC)+1,iC)=1; %wrap periodic bins around 0
                 end
-            end
+            end %iC
             
             %% combine bins over dimensions
             k=cumprod(Bn.nBinCvr);
             Bn.A=ADmn(:,1);
             for iC=2:Bn.nCvr
                 Bn.A = Bn.A + (ADmn(:,iC)-1)*k(iC-1);
-            end
+            end %iC
             
             Bn.nBin=prod(Bn.nBinCvr);
             Bn.APrj=cell(1,Bn.nCvr);
@@ -157,13 +174,13 @@ classdef CovariateBinning
                     
                                         
                     if iC==1
-                        Bn.BinLbl{iB}=sprintf('%s[%g, %g]',Bn.CvrLbl{iC}(1),BinSt(I),BinEnd(I));
+                        Bn.BinLbl{iB}=sprintf('%s[%g, %g)',Bn.CvrLbl{iC}(1),BinSt(I),BinEnd(I));
                     else
-                        Bn.BinLbl{iB}=[Bn.BinLbl{iB},' x ',sprintf('%s[%g, %g]',Bn.CvrLbl{iC}(1),BinSt(I),BinEnd(I))];
+                        Bn.BinLbl{iB}=[Bn.BinLbl{iB},' x ',sprintf('%s[%g, %g)',Bn.CvrLbl{iC}(1),BinSt(I),BinEnd(I))];
                     end
                     %% Store bin start and end points for plot labels
-                end
-            end           
+                end  %iB
+            end  %iC          
             %% Ensure have no empty bins (or bins with <30 obs)          
             Bn.Cnt=accumarray(Bn.A,Bn.A,[Bn.nBin,1],@numel); %
             if any(Bn.Cnt < 30)
@@ -194,8 +211,8 @@ classdef CovariateBinning
                         set(gca,'xtick',0:45:360,'xlim',[0,360])
                     end
                     ylabel(Bn.RspLbl{i})
-                end
-            end
+                end  %iC
+            end %i
             savePics('Figures/Stg2_Data_BinEdges')        
                         
             %% Joint plot
@@ -216,9 +233,9 @@ classdef CovariateBinning
                     if Bn.nBin > 1
                         title(Bn.BinLbl{iC})
                     end
-                end
+                end  %iC
                 savePics(sprintf('Figures/Stg2_Data_BinScatterPlot_Y%g_Y1',iD))
-            end        
+            end  %iD       
             
         end %PlotBins
         
@@ -228,7 +245,7 @@ classdef CovariateBinning
             hold on
             for i=1:Bn.nBinCvr(iC)  %loop over bins
                 plot(Bn.Edg{iC}(i)*[1,1],ylim,'r--','linewidth',1)
-            end     
+            end %i     
             ylim(ty);
         end %PlotBinEdge
                      
@@ -239,12 +256,12 @@ classdef CovariateBinning
                 if Bn.IsPrd(iC)
                    X=mod(X,360);
                 end
-            end
+            end %iC
         end %SampleCovariateFromBin
         
         function PlotParameter(Bn, P,iC,varargin)
             %Project and plot parameter for ith Covariates
-            %INPUT
+            %% INPUTS
             %P parameters
             %iC covariate dimension
             % optional plotting arguements                        
