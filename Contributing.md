@@ -19,7 +19,6 @@ There are a few conventions that have developed over time around packages:
 
 * The repository has the following structure
     * *Code* this is where the MATLAB code fits that is called in the *UnitTests* folder. There is a separate subfolder the different versions of the Heffernan and Tawn model this allows us to switch between the different assumed distributions for the residual distribution. This folder will need to be on your MATLAB path. 
-    * *Paper* this folder contains the user guide that steps through an example application and the stages needed to be undertaken to complete an analysis.
     * *UnitTests* this folder contains a number of unit tests that have been used to determine the robustness of the code. 
 
 * *UnitTests/Stages_** contains a set of scripts that enable us to complete a full analysis:
