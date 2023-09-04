@@ -18,7 +18,7 @@ main
 ├─── develop
 ```
 
-* `master` is the main branch of the code. 
+* `main` is the main branch of the code. 
 * `develop` is where any bug fixes and testing will take place.
 
 ## User guide
