@@ -3,7 +3,7 @@
 
 ## Introduction
 
-The covXtreme: Piecewise_Covariate_Extremes (PCE) model and software for estimation of environmental design contours using the conditional extremes model of Heffernan and Tawn
+The covXtreme model and software for estimation of environmental design contours using the conditional extremes model of Heffernan and Tawn
 [2004]. The sample is composed of peaks over threshold values for both a conditioning variate and its associated conditioned variates. Each pair is allocated to a particular covariate bin; all (joint)
 observations with the same covariate bin are assumed to have common extreme value characteristics. The non-stationary marginal extreme value characteristics of each variate is estimated using
 roughness-penalised maximum likelihood estimation using a generalised Pareto (GP) model above the threshold and gamma below. The extremal dependence structure between the variates on a transformed standard scale (Gumbel or Laplace) is then estimated using a conditional extremes model, also piecewise non-stationary with respect to covariates. Different approaches to contour estimation,
