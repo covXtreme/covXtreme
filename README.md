@@ -23,7 +23,7 @@ main
 
 ## User guide
 
-More details of the code can be found in the covXtreme user guide document see: (https://github.com/sede-open/covXtreme/blob/main/covXtreme_UserGuide.pdf](https://github.com/sede-open/covXtreme/blob/main/covXtreme_UserGuide.pdf)
+More details of the code can be found in the covXtreme user guide document see covXtreme_UserGuide.pdf in the main repository folder.
 
 ## Contact
 
