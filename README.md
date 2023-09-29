@@ -23,11 +23,11 @@ main
 
 ## User guide
 
-More details of the code can be found in the covXtreme user guide document.
+More details of the code can be found in the covXtreme user guide document see covXtreme_UserGuide.pdf in the main repository folder.
 
 ## Contact
 
-If you require any more information, please contact ross.towe{at}.shell.com. Please include *covXtreme* in the subject of the email. 
+If you require any more information, please contact ross.towe{at}shell.com. Please include *covXtreme* in the subject of the email. 
 
 ## Feedback
 This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). 
