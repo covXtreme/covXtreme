@@ -27,7 +27,7 @@ More details of the code can be found in the covXtreme user guide document see c
 
 ## Issues and suggestions
 
-If you have any issues or suggestions or how the code could be improved, please register this as an issue in GitHub Issues tab. In the description, please specifify the file and function names. We will review periodically review these issues and suggestions, we are more than happy for individuals to contribute their proposed changes to the code and we will review the pull request before merging into the main code base. 
+Please see the Contributing.md in the main folder of the GitHub repository. 
 
 ## Contact
 
