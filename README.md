@@ -9,7 +9,7 @@ observations with the same covariate bin are assumed to have common extreme valu
 roughness-penalised maximum likelihood estimation using a generalised Pareto (GP) model above the threshold and gamma below. The extremal dependence structure between the variates on a transformed standard scale (Gumbel or Laplace) is then estimated using a conditional extremes model, also piecewise non-stationary with respect to covariates. Different approaches to contour estimation,
 generally reliant on simulation under the fitted models, are outlined.
 
-More theoretical details of the code and respective models can be found in [https://www.sciencedirect.com/science/article/abs/pii/S0029801819303798](https://arxiv.org/abs/2309.17295). This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB. 
+More theoretical details of the code and respective models can be found in [https://arxiv.org/abs/2309.17295]. This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB. 
 
 ## Repository overview
 
@@ -25,9 +25,13 @@ main
 
 More details of the code can be found in the covXtreme user guide document see covXtreme_UserGuide.pdf in the main repository folder.
 
+## Issues and suggestions
+
+Please see the Contributing.md in the main folder of the GitHub repository. 
+
 ## Contact
 
-If you require any more information, please contact ross.towe{at}shell.com. Please include *covXtreme* in the subject of the email. 
+If you require any additional information, please contact ross.towe{at}shell.com. Please include *covXtreme* in the subject of the email. 
 
 ## Feedback
 This repository is maintained by David Randell (@davidrandell84), Emma Ross (ERoss0), Philip Jonathan (@ygraigarw) and Ross Towe (@RPTowe). 
