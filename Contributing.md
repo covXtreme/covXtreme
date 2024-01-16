@@ -31,6 +31,12 @@ There are a few conventions that have developed over time around packages:
 
 ## How Can I Contribute?
 
+### Potential Enhancements 
+* Multivariate diagnostics such as the coefficient of tail dependence e.g., eta, chi and chibar.
+* Choice of optimal bin edges - a potential approach would be to use reversible-jump Markov chain Monte Carlo.
+* Implementation of alternative contour methods. 
+* Reimplementation of *covXtreme* in Python.  
+
 ### Reporting Bugs/Issues and Suggesting Enhancements
 
 This section guides you through submitting an enhancement suggestion or an issue with the *covXtreme* code, including completely new features and minor improvements to existing functionality. Please submit an issue request with a detailed explanation on the current problems you are facing.
