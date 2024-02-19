@@ -10,7 +10,7 @@ The following is a set of guidelines for contributing to *covXtreme* and its pac
 
 More theoretical details of the model can be found in https://www.sciencedirect.com/science/article/abs/pii/S0029801819303798. This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB.
 
-The code is constantly developing and we will ensure to maintin that it is up to date and make clear any changes that may have an impact of the end user.
+The code is constantly developing and we will ensure to maintain that it is up to date and make clear any changes that may have an impact of the end user.
 
 
 #### Package Conventions
