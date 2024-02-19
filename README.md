@@ -2,7 +2,7 @@
 
 ## Background
 
-Hazard risk analysis often involves modelling extreme events, for example of natural phenomena such as rainfall, temperature and ocean waves, or of man-made systems such as industrial processes and stock-markets.  We seek to understand the characteristics of the most exceptional (largest or most rare) events we have seen historically, and potentially might see is we look harder.
+Hazard risk analysis often involves modelling extreme events, for example of natural phenomena such as rainfall, temperature and ocean waves, or of man-made systems such as industrial processes and stock-markets.  We seek to understand the characteristics of the most exceptional (largest or most rare) events we have seen historically, and potentially might see if we look harder.
 
 In the world of statistical modelling, the central limit theorem provides us with solid reasoning to model the average of a sample of data with a Normal (or Gaussian) distribution. For extremes of data, mathematical theory tells us that extreme value distributions are most appropriate to use. This enables us to construct statistical models for extreme events, and to perform quantitative risk analysis using them. Hence, in a natural hazard context, we can design flood defences and sea walls to pre-specified performance standards. 
 
