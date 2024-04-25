@@ -589,6 +589,20 @@ classdef MarginalModel
             
         end %INV_Standard
         
+        function X=INV_Standard_survivor(obj,Q)
+            %transform (1-uniform) to standard margins
+            %using inverse CDF
+            switch obj.MarginType
+                case 'Gumbel'
+                    X = -log(-log1p(-Q));
+                case 'Laplace'
+                    X = sign(Q-0.5).*log(2*min(Q,1-Q));
+                otherwise
+                    error('Margin Type not recognised')
+            end
+            
+        end %INV_Standard
+        
         function P=CDF_Standard(obj,X)
             %transform from standard to uniform margins using CDF
             switch obj.MarginType
@@ -1185,6 +1199,27 @@ classdef MarginalModel
             
         end %gpcdf
         
+        function Q=gpsurvivor(X,Xi,Sgm,Thr)
+            %     Q=gpsurvivor(X,Xi,Sgm,Thr) returns the survivor functoin of the generalized Pareto (GP)
+            %     distribution with tail index (shape) parameter Xi, scale parameter Sgm,
+            %     and threshold (location) parameter Thr, evaluated at the values in X.
+            %     The size of P is the common size of the input arguments.
+            Z=bsxfun(@rdivide,bsxfun(@minus,X,Thr),Sgm);
+            t1=1+bsxfun(@times,Xi,Z);
+            t1(t1<=0)=0;  %deal with upper end point of distribtion
+            Q=bsxfun(@power,t1,-1./Xi);
+            %% Gumbel case
+            I=abs(Xi)<1e-5;
+            if any(I(:))
+                Xi=bsxfun(@times,Xi,ones(size(Z)));
+                I=abs(Xi)<1e-5;
+                
+                Q(I)=exp(-Z(I));
+            end
+            Q(bsxfun(@le,X,Thr))=NaN; %density of zero below the threshold
+            Q(Z<=0)=NaN;
+        end %gpsurvivor
+        
         function F=gampdf(X,Alp,Bet,GmmLct)
             %     F = gampdf(X,Alp,Bet,GmmLct) returns the pdf of the gamma distribution using orthog0nal
             %     parameterisation density
@@ -1213,6 +1248,15 @@ classdef MarginalModel
             Z = bsxfun(@times,Alp./Bet,Z);
             P = bsxfun(@gammainc,Z, Alp);
         end %gamcdf
+        
+        function Q=gamsurvivor(X,Alp,Bet,GmmLct)
+            %     Q=gamsurvivor(X,Alp,Bet,GmmLct) returns the survivor 
+            %     function of the gamma distribution
+            Z=bsxfun(@minus,X,GmmLct);
+            Z(Z<0)=0;
+            Z = bsxfun(@times,Alp./Bet,Z);
+            Q = bsxfun(@(x,y)gammainc(x,y,'upper'),Z, Alp);
+        end %gamsurvivor
         
         function X=gaminv(P,Alp,Bet,GmmLct)
             %     X = gaminv(P,Alp,Bet,GmmLct)returns the inverse the gamma distribution using orthognal
@@ -1250,6 +1294,26 @@ classdef MarginalModel
             P(~IBlw)=P2(~IBlw);
             
         end %gamgpcdf
+        
+        function Q=gamgpsurvivor(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
+            %     Q=gamgpsurvivor(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau) returns 
+            %     the survivor function of the gamma-gp distribution
+            
+            %threshold
+            %           Thr=MarginalModel.gaminv(Tau,Alp,Bet,GmmLct);
+            IBlw=X<Thr;
+            %gamma part
+            P1=MarginalModel.gamsurvivor(X,Alp,Bet,GmmLct);
+            % mjj 08/11/18: I think tau scaling for Gamma was missing:
+            % added it.
+            %gp part
+            P2=MarginalModel.gpsurvivor(X,Xi,Sgm,Thr).*(1-Tau);
+            %combine
+            Q=NaN(size(P1));
+            Q(IBlw)=P1(IBlw);
+            Q(~IBlw)=P2(~IBlw);
+            
+        end %gamgpsurvivor
         
         function f=gamgppdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
             % f=gamgpcdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution         
