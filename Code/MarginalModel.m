@@ -272,6 +272,7 @@ classdef MarginalModel
             end
             
             YUnif=NaN(numel(obj.Y),numel(iBt));
+            YMrg=NaN(numel(obj.Y),numel(iBt));
             
             for i=1:numel(iBt)
                 jBt=iBt(i);
@@ -284,9 +285,16 @@ classdef MarginalModel
                     end
                 end
                 YUnif(:,i)=CDF(obj,tY,tA,jBt);
+                
+                %% transform from uniform to standard margins
+                YMrg(:,i)=INV_Standard(obj,YUnif(:,i));
+                
+                J = YUnif(:,i) == 1;
+                if any(J)
+                    Q=SURVIVOR(obj,tY(J),tA(J),jBt);
+                    YMrg(J,i)=INV_Standard_survivor(obj,Q);
+                end
             end
-            %% transform from uniform to standard margins
-            YMrg=INV_Standard(obj,YUnif);
             
             if any(isinf(YMrg(:)))
                 error('Bad transformation to %s',obj.MarginType)
@@ -477,6 +485,34 @@ classdef MarginalModel
             end
             
         end %CDF
+        
+        function P=SURVIVOR(obj,X,A,I)
+            %SURVIVOR function for marginal model  (empirical below threshold - GP above)
+            %SURVIVOR(obj,X) compute survivor function for all bins and bootstraps using original data X is the locations to compute cdf at
+            %SURVIVOR(obj,X,A) compute survivor function for all bins and bootstraps using original data at specific
+            %bins A
+            %SURVIVOR(obj,X,A,I) compute survivor function for all bins and bootstraps using original data at specific
+            %bins and bootstraps indexes I
+            if nargin==3  %Y not specified but A specifed
+                I=1:obj.nBoot;
+            end
+            
+            if nargin<=2  %cdf for everything
+                P=MarginalModel.gamgpsurvivor(X,obj.Shp',obj.Scl,obj.Thr,obj.Omg,obj.Kpp,obj.GmmLct,obj.NEP');
+            else %specified specfic bins and bootstraps
+                if numel(A)==numel(I) && numel(A)>1   %cdf for subset defined by bins (A) and bootstraps (I), where output is vector
+                    if obj.Bn.nBin == 1  %single covariate bins
+                        P=MarginalModel.gamgpsurvivor(X,obj.Shp(I),obj.Scl(I)',obj.Thr(I)',obj.Omg(I)',obj.Kpp(I)',obj.GmmLct(A),obj.NEP(I));
+                    else  %multiple covariate bins
+                        J=sub2ind([obj.Bn.nBin,obj.nBoot],A,I);
+                        P=MarginalModel.gamgpsurvivor(X,obj.Shp(I),obj.Scl(J),obj.Thr(J),obj.Omg(J),obj.Kpp(J),obj.GmmLct(A),obj.NEP(I));
+                    end
+                else  % cdf for subset defined by bins (A) and bootstraps (I)
+                    P=MarginalModel.gamgpsurvivor(X,obj.Shp(I)',obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(A),obj.NEP(I)');
+                end
+            end
+            
+        end %SURVIVOR
         
         function P=PDF(obj,X,A,I)
             %PDF function for marginal model  (empirical below threshold - PDF above)
