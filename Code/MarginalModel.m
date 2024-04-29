@@ -272,6 +272,7 @@ classdef MarginalModel
             end
             
             YUnif=NaN(numel(obj.Y),numel(iBt));
+            YMrg=NaN(numel(obj.Y),numel(iBt));
             
             for i=1:numel(iBt)
                 jBt=iBt(i);
@@ -284,9 +285,16 @@ classdef MarginalModel
                     end
                 end
                 YUnif(:,i)=CDF(obj,tY,tA,jBt);
+                
+                %% transform from uniform to standard margins
+                YMrg(:,i)=INV_Standard(obj,YUnif(:,i));
+                
+                J = YUnif(:,i) == 1;
+                if any(J)
+                    Q=SURVIVOR(obj,tY(J),tA(J),jBt);
+                    YMrg(J,i)=INV_Standard_survivor(obj,Q);
+                end
             end
-            %% transform from uniform to standard margins
-            YMrg=INV_Standard(obj,YUnif);
             
             if any(isinf(YMrg(:)))
                 error('Bad transformation to %s',obj.MarginType)
@@ -478,6 +486,34 @@ classdef MarginalModel
             
         end %CDF
         
+        function P=SURVIVOR(obj,X,A,I)
+            %SURVIVOR function for marginal model  (empirical below threshold - GP above)
+            %SURVIVOR(obj,X) compute survivor function for all bins and bootstraps using original data X is the locations to compute cdf at
+            %SURVIVOR(obj,X,A) compute survivor function for all bins and bootstraps using original data at specific
+            %bins A
+            %SURVIVOR(obj,X,A,I) compute survivor function for all bins and bootstraps using original data at specific
+            %bins and bootstraps indexes I
+            if nargin==3  %Y not specified but A specifed
+                I=1:obj.nBoot;
+            end
+            
+            if nargin<=2  %cdf for everything
+                P=MarginalModel.gamgpsurvivor(X,obj.Shp',obj.Scl,obj.Thr,obj.Omg,obj.Kpp,obj.GmmLct,obj.NEP');
+            else %specified specfic bins and bootstraps
+                if numel(A)==numel(I) && numel(A)>1   %cdf for subset defined by bins (A) and bootstraps (I), where output is vector
+                    if obj.Bn.nBin == 1  %single covariate bins
+                        P=MarginalModel.gamgpsurvivor(X,obj.Shp(I),obj.Scl(I)',obj.Thr(I)',obj.Omg(I)',obj.Kpp(I)',obj.GmmLct(A),obj.NEP(I));
+                    else  %multiple covariate bins
+                        J=sub2ind([obj.Bn.nBin,obj.nBoot],A,I);
+                        P=MarginalModel.gamgpsurvivor(X,obj.Shp(I),obj.Scl(J),obj.Thr(J),obj.Omg(J),obj.Kpp(J),obj.GmmLct(A),obj.NEP(I));
+                    end
+                else  % cdf for subset defined by bins (A) and bootstraps (I)
+                    P=MarginalModel.gamgpsurvivor(X,obj.Shp(I)',obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(A),obj.NEP(I)');
+                end
+            end
+            
+        end %SURVIVOR
+        
         function P=PDF(obj,X,A,I)
             %PDF function for marginal model  (empirical below threshold - PDF above)
             %PDF(obj,X) compute PDF for all bins and bootstraps using original data X is the locations to compute cdf at
@@ -583,6 +619,20 @@ classdef MarginalModel
                     X = -log(-log(P));
                 case 'Laplace'
                     X = sign(0.5-P).*log(2*min(1-P,P));
+                otherwise
+                    error('Margin Type not recognised')
+            end
+            
+        end %INV_Standard
+        
+        function X=INV_Standard_survivor(obj,Q)
+            %transform (1-uniform) to standard margins
+            %using inverse CDF
+            switch obj.MarginType
+                case 'Gumbel'
+                    X = -log(-log1p(-Q));
+                case 'Laplace'
+                    X = sign(Q-0.5).*log(2*min(Q,1-Q));
                 otherwise
                     error('Margin Type not recognised')
             end
@@ -1185,6 +1235,27 @@ classdef MarginalModel
             
         end %gpcdf
         
+        function Q=gpsurvivor(X,Xi,Sgm,Thr)
+            %     Q=gpsurvivor(X,Xi,Sgm,Thr) returns the survivor functoin of the generalized Pareto (GP)
+            %     distribution with tail index (shape) parameter Xi, scale parameter Sgm,
+            %     and threshold (location) parameter Thr, evaluated at the values in X.
+            %     The size of P is the common size of the input arguments.
+            Z=bsxfun(@rdivide,bsxfun(@minus,X,Thr),Sgm);
+            t1=1+bsxfun(@times,Xi,Z);
+            t1(t1<=0)=0;  %deal with upper end point of distribtion
+            Q=bsxfun(@power,t1,-1./Xi);
+            %% Gumbel case
+            I=abs(Xi)<1e-5;
+            if any(I(:))
+                Xi=bsxfun(@times,Xi,ones(size(Z)));
+                I=abs(Xi)<1e-5;
+                
+                Q(I)=exp(-Z(I));
+            end
+            Q(bsxfun(@le,X,Thr))=NaN; %density of zero below the threshold
+            Q(Z<=0)=NaN;
+        end %gpsurvivor
+        
         function F=gampdf(X,Alp,Bet,GmmLct)
             %     F = gampdf(X,Alp,Bet,GmmLct) returns the pdf of the gamma distribution using orthog0nal
             %     parameterisation density
@@ -1213,6 +1284,15 @@ classdef MarginalModel
             Z = bsxfun(@times,Alp./Bet,Z);
             P = bsxfun(@gammainc,Z, Alp);
         end %gamcdf
+        
+        function Q=gamsurvivor(X,Alp,Bet,GmmLct)
+            %     Q=gamsurvivor(X,Alp,Bet,GmmLct) returns the survivor 
+            %     function of the gamma distribution
+            Z=bsxfun(@minus,X,GmmLct);
+            Z(Z<0)=0;
+            Z = bsxfun(@times,Alp./Bet,Z);
+            Q = bsxfun(@(x,y)gammainc(x,y,'upper'),Z, Alp);
+        end %gamsurvivor
         
         function X=gaminv(P,Alp,Bet,GmmLct)
             %     X = gaminv(P,Alp,Bet,GmmLct)returns the inverse the gamma distribution using orthognal
@@ -1250,6 +1330,26 @@ classdef MarginalModel
             P(~IBlw)=P2(~IBlw);
             
         end %gamgpcdf
+        
+        function Q=gamgpsurvivor(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
+            %     Q=gamgpsurvivor(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau) returns 
+            %     the survivor function of the gamma-gp distribution
+            
+            %threshold
+            %           Thr=MarginalModel.gaminv(Tau,Alp,Bet,GmmLct);
+            IBlw=X<Thr;
+            %gamma part
+            P1=MarginalModel.gamsurvivor(X,Alp,Bet,GmmLct);
+            % mjj 08/11/18: I think tau scaling for Gamma was missing:
+            % added it.
+            %gp part
+            P2=MarginalModel.gpsurvivor(X,Xi,Sgm,Thr).*(1-Tau);
+            %combine
+            Q=NaN(size(P1));
+            Q(IBlw)=P1(IBlw);
+            Q(~IBlw)=P2(~IBlw);
+            
+        end %gamgpsurvivor
         
         function f=gamgppdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
             % f=gamgpcdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution         
