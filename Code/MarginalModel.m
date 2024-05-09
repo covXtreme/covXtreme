@@ -22,7 +22,7 @@ classdef MarginalModel
         RspSavLbl   %1 x 1 (string), rseponse label for saving plots (Avoid special characters)
         CvrLbl      %nCvr x 1, (string), covariate label vecotr
         nBoot=100;  %1 x 1, number of bootstrap resamples
-        nReps=50;   %1 x 1, number of replicated bootstrap NEP values 
+        nReps=1;   %1 x 1, number of replicated bootstrap NEP values 
         RtrPrd=100; %nRtr x 1 Return Period  in years
         
         %% Parameters
@@ -36,8 +36,10 @@ classdef MarginalModel
         
         NEP      %nBoot x 1, Non Exceedence Probability Quantile threshold
         Thr      %nBin x nBoot, Extreme value threshold nBin x nB
-        ThrDiag  %nBin x nBoot, Extreme value threshold diangostic nBin x nB
-        ThrDiagExp%nBin x nBoot, Extreme value threshold diagnostic on Exponetial margins nBin x nB
+        ThrDiagExp%nBin x nBoot, Extreme value threshold diagnostic on Exponential margins
+        ThrDiagLap%nBin x nBoot, Extreme value threshold diagnostic on Laplace margins
+        ThrDiagFre%nBin x nBoot, Extreme value threshold diagnostic on Frechet margins
+        ThrDiagUni%nBin x nBoot, Extreme value threshold diagnostic on Uniform margins
         Rat      %nBin x nBoot, count no. observations in each bin nBin x nB
         BSInd    %nDat x nBoot, bootstrap index;
         
@@ -76,7 +78,7 @@ classdef MarginalModel
     end
     
     methods
-        function obj=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType)
+        function obj=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType,nReps)
             %% INPUTS:
             % - Dat structure  (from stage 1)
             %     - Dat.X     nDat x nCvr  covariate values
@@ -93,6 +95,8 @@ classdef MarginalModel
             % - RtrPrd  return period (years) (assumed to be 100 if non speicifed)
             % - CV cross validation structure with control parameters
             % - MarginType, 'Gumbel', 'Laplace' (default is Laplace)
+            % - nReps number of replicated bootstrap samples if nRep=1,
+            % defaults to ranodm sampling of the NEP range 
             %% OUTPUTS:
             % - obj, Marginal Model class containing details of data and
             % fitted piecewise constant marginal model
@@ -137,13 +141,6 @@ classdef MarginalModel
                     obj.nBoot=1;
                 end
             end
-            if obj.nReps == 1
-                %sample NEPs over range with middle of range first
-                obj.NEP = [range(NEP)/2+min(NEP) ;sort(rand(obj.nBoot-1,1)).*range(NEP)+min(NEP)];  
-            else
-                obj.NEP = repmat(linspace(min(NEP), max(NEP),obj.nBoot/obj.nReps),obj.nReps,1);
-                obj.NEP = obj.NEP(:);
-            end
             % validate number of years of data 
             if nargin>=6
                 validateattributes(Yrs, {'numeric'},{'scalar','positive'},'MarginalModel','Yrs',6);
@@ -153,12 +150,23 @@ classdef MarginalModel
             if nargin>=7
                 validateattributes(RtrPrd, {'numeric'},{'vector','positive'},'MarginalModel','RV',7);
                 obj.RtrPrd=sort(RtrPrd);
-                
             end
             % validate margin type 
             if nargin>=9
                 validateattributes(MarginType,{'string','char'},{},'MarginalModel','MarginType',9)
                 obj.MarginType = validatestring(MarginType,{'Gumbel','Laplace'});
+            end
+            % validate margin type 
+            if nargin>=9
+                validateattributes(nReps,{'numeric'},{'vector','positive'},'MarginalModel','nReps',10)
+                obj.nReps = nReps;
+            end
+            if obj.nReps == 1
+                %sample NEPs over range with middle of range first
+                obj.NEP = [range(NEP)/2+min(NEP) ;sort(rand(obj.nBoot-1,1)).*range(NEP)+min(NEP)];
+            else
+                obj.NEP = repmat(linspace(min(NEP), max(NEP),obj.nBoot/obj.nReps),obj.nReps,1);
+                obj.NEP = obj.NEP(:);
             end
             
             %% Check cross-validation inputs
@@ -198,8 +206,10 @@ classdef MarginalModel
             obj.CVLackOfFit=NaN(obj.nSmth,obj.nBoot); %Lack of fit associated with different smoothness parameters [nSmth x nB]
             obj.BSInd=NaN(numel(obj.Y),obj.nBoot);  %Bootstrap sample indices nDat x nBoot
             obj.SmthSet=logspace(obj.SmthLB,obj.SmthUB,obj.nSmth); %try range smoothness penalties for sigma varying by bin [1 x nSmth]
-            obj.ThrDiag=NaN(obj.Bn.nBin,obj.nBoot); % Threshold diagnostic matrix [nBin x nB]
             obj.ThrDiagExp=NaN(obj.nBoot,1); % Threshold diagnostic matrix on exponential margins [nBin x nB]
+            obj.ThrDiagLap=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Laplace margins
+            obj.ThrDiagFre=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Frechet margins
+            obj.ThrDiagUni=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Uniform margins
             %% Fit model
             obj = Fit(obj);
             
@@ -637,6 +647,40 @@ classdef MarginalModel
             end
             F(isnan(F))=0;
         end %LogPDF_Standard
+
+        function obj=Threshold_Diagnostic(obj,iBt,tY,IExc,AExc,nPts_Eval)
+            %% Threshold diagnostic based on QQ metrics
+            % Evalulation of Murphy et al (2024) and Varty (Exponential
+            % margins version)
+            % Results are visualised in PlotThresholdDiagnostic
+            %% INPUTS
+            %iBt: index for the bootsrap sample
+            %tY: sample of data points
+            %IExc: index of those points above the threshold
+            %Aexc: bin index of those points above the threshold
+            %nPts_Eval: number of points to evalulate the CDF to calculate
+            %the discprenacy
+            if nargin<6
+                nPts_Eval=1000;
+            end
+            % emp probabilities
+            Emp_Prob=(1:nPts_Eval)/(nPts_Eval+1);
+            % extract threshold exceedances
+            tYExc=tY(IExc);
+            %Convert to CDF
+            gp_cdf=gpcdf(tYExc,obj.Shp(iBt,:),obj.Scl(AExc,iBt),obj.Thr(AExc,iBt));
+            % exponential margins version
+            exp_data=expinv(gp_cdf);
+            obj.ThrDiagExp(iBt)=mean(abs(quantile(exp_data,Emp_Prob)-expinv(Emp_Prob)));
+            % Laplace margins version
+            lap_data=obj.INV_Standard(gp_cdf);
+            obj.ThrDiagLap(iBt)=mean(abs(quantile(lap_data,Emp_Prob)-obj.INV_Standard(Emp_Prob)));
+            % Uniform margins version
+            obj.ThrDiagUni(iBt)=mean(abs(quantile(gp_cdf,Emp_Prob)-expinv(Emp_Prob)));
+            % Frechet margins version
+            frech_data=-1./log(gp_cdf);
+            obj.ThrDiagFre(iBt)=mean(abs(quantile(frech_data,Emp_Prob)-(-1./log(Emp_Prob))));
+        end %Threshold_Diagnostic
         
         function Plot(obj)
             %Plot results of PPC marginal fit
@@ -689,34 +733,6 @@ classdef MarginalModel
         function nRtr=get.nRtr(obj)
             nRtr=numel(obj.RtrPrd);
         end %get.nRtr
-        
-        function obj=Threshold_Diagnostic(obj,iBt,tY,IExc,AExc,nPts_Eval)
-            %% Threshold diagnostic based on Murphy et al (2024)
-            %% INPUTS
-            %iBt: index for the bootsrap sample 
-            %tY: sample of data points
-            %IExc: index of those points above the threshold
-            %Aexc: bin index of those points above the threshold
-            %nPts_Eval: number of points to evalulate the CDF
-            if nargin<6
-                nPts_Eval=200;
-            end
-            % emp probailities 
-            Emp_Prob=(1:nPts_Eval)/(nPts_Eval+1);
-            % extract threshold exceedances 
-            tYExc=tY(IExc);
-            for iBn=1:obj.Bn.nBin
-                % evaluate empirical probabilites using the fitted GP model
-                Emp_Quant=gpinv(Emp_Prob,obj.Shp(iBt,:),obj.Scl(iBn,iBt),obj.Thr(iBn,iBt));
-                % sample quantiles
-                Data_Quant=quantile(tYExc(AExc==iBn),Emp_Prob);
-                % calculate metric
-                obj.ThrDiag(iBn,iBt)=mean(abs(Data_Quant-Emp_Quant));
-            end
-            % exponential margins version
-           exp_data=expinv(gpcdf(tYExc,obj.Shp(iBt,:),obj.Scl(AExc,iBt),obj.Thr(AExc,iBt)));
-           obj.ThrDiagExp(iBt)=mean(abs(quantile(exp_data,Emp_Prob)-expinv(Emp_Prob)));
-        end %Threshold_Diagnostic
         
     end %methods
     
@@ -1023,24 +1039,19 @@ classdef MarginalModel
         function PlotThresholdDiagnostic(obj)
             tidxNEP=repmat(1:obj.nBoot/obj.nReps,obj.nReps,1);
             idxNEP=tidxNEP(:);
-            %TODO deal with multiple bins 
-            if obj.Bn.nBin>1
-                OverallThrDiag=accumarray(idxNEP,mean(obj.ThrDiag),[max(idxNEP), 1],@(x)(mean(x)));
-            else
-                OverallThrDiag=accumarray(idxNEP,obj.ThrDiag,[max(idxNEP), 1],@(x)(mean(x)));
-            end
             unique_NEP=unique(obj.NEP);
             OverallThrDiagExp=accumarray(idxNEP,obj.ThrDiagExp,[max(idxNEP), 1],@(x)(mean(x)));
-            subplot(1,2,1)
-            plot(unique_NEP,OverallThrDiag,'-ok','LineWidth',2);
-            xlabel('Non Exceedance Proability');
-            ylabel('EQD');
-            title('Expected Quantile Discrepancy');
-            subplot(1,2,2)
-                     plot(unique_NEP,OverallThrDiagExp,'-ok','LineWidth',2);
-            xlabel('Non Exceedance Proability');
-            ylabel('Varty Method');
-            title('Varty Method');
+            OverallThrDiagUni=accumarray(idxNEP,obj.ThrDiagUni,[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagLap=accumarray(idxNEP,obj.ThrDiagLap,[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagFre=accumarray(idxNEP,obj.ThrDiagFre,[max(idxNEP), 1],@(x)(mean(x)));
+            plot(unique_NEP,OverallThrDiagExp./sum(OverallThrDiagExp),'-ok','LineWidth',2);
+            hold on
+            plot(unique_NEP,OverallThrDiagUni./sum(OverallThrDiagUni),'-ob','LineWidth',2);
+            plot(unique_NEP,OverallThrDiagLap./sum(OverallThrDiagLap),'-or','LineWidth',2);
+            plot(unique_NEP,OverallThrDiagFre./sum(OverallThrDiagFre),'-og','LineWidth',2);
+            xlabel('Non Exceedance Probability');
+            ylabel('Metric');
+            title('Standardised Metric');
             savePics(fullfile(obj.FigureFolder,sprintf('Stg3_%s_9_ThresholdDiagnostic',obj.RspSavLbl)))
         end %PlotThresholdDiagnostic        
         
