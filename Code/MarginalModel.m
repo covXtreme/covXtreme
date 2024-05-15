@@ -36,10 +36,7 @@ classdef MarginalModel
         
         NEP      %nBoot x 1, Non Exceedence Probability Quantile threshold
         Thr      %nBin x nBoot, Extreme value threshold nBin x nB
-        ThrDiagExp%nBin x nBoot, Extreme value threshold diagnostic on Exponential margins
-        ThrDiagLap%nBin x nBoot, Extreme value threshold diagnostic on Laplace margins
-        ThrDiagFre%nBin x nBoot, Extreme value threshold diagnostic on Frechet margins
-        ThrDiagUni%nBin x nBoot, Extreme value threshold diagnostic on Uniform margins
+        ThrDiag  %nBin x 4, Extreme value threshold diagnostic on Exponential, Frechet, Laplace, Uniform margins
         Rat      %nBin x nBoot, count no. observations in each bin nBin x nB
         BSInd    %nDat x nBoot, bootstrap index;
         
@@ -206,10 +203,7 @@ classdef MarginalModel
             obj.CVLackOfFit=NaN(obj.nSmth,obj.nBoot); %Lack of fit associated with different smoothness parameters [nSmth x nB]
             obj.BSInd=NaN(numel(obj.Y),obj.nBoot);  %Bootstrap sample indices nDat x nBoot
             obj.SmthSet=logspace(obj.SmthLB,obj.SmthUB,obj.nSmth); %try range smoothness penalties for sigma varying by bin [1 x nSmth]
-            obj.ThrDiagExp=NaN(obj.nBoot,1); % Threshold diagnostic matrix on exponential margins [nBin x nB]
-            obj.ThrDiagLap=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Laplace margins
-            obj.ThrDiagFre=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Frechet margins
-            obj.ThrDiagUni=NaN(obj.nBoot,1);%nBin x nBoot, Extreme value threshold diagnostic on Uniform margins
+            obj.ThrDiag=NaN(obj.nBoot,4); % Threshold diagnostic matrix on four different margins [nBin x nB]
             %% Fit model
             obj = Fit(obj);
             
@@ -604,6 +598,12 @@ classdef MarginalModel
                     X = -log(-log(P));
                 case 'Laplace'
                     X = sign(0.5-P).*log(2*min(1-P,P));
+                case 'Frechet'
+                    X = -1./log(P);
+                case 'Exponential'
+                    X = -log(1-P);
+                case 'Uniform'
+                    X = P;
                 otherwise
                     error('Margin Type not recognised')
             end
@@ -616,7 +616,7 @@ classdef MarginalModel
                 case 'Gumbel'
                     P = exp(-exp(-X));
                 case 'Laplace'
-                    P = (X>0)-.5*sign(X).*exp(-abs(X));
+                    P = (X>0)-.5*sign(X).*exp(-abs(X));                   
                 otherwise
                     error('Margin Type not recognised')
             end
@@ -663,23 +663,26 @@ classdef MarginalModel
             if nargin<6
                 nPts_Eval=1000;
             end
+            % ensure margin type for modelling is maintained
+            tMarginType=obj.MarginType;
             % emp probabilities
             Emp_Prob=(1:nPts_Eval)/(nPts_Eval+1);
             % extract threshold exceedances
             tYExc=tY(IExc);
             %Convert to CDF
-            gp_cdf=gpcdf(tYExc,obj.Shp(iBt,:),obj.Scl(AExc,iBt),obj.Thr(AExc,iBt));
-            % exponential margins version
-            exp_data=expinv(gp_cdf);
-            obj.ThrDiagExp(iBt)=mean(abs(quantile(exp_data,Emp_Prob)-expinv(Emp_Prob)));
-            % Laplace margins version
-            lap_data=obj.INV_Standard(gp_cdf);
-            obj.ThrDiagLap(iBt)=mean(abs(quantile(lap_data,Emp_Prob)-obj.INV_Standard(Emp_Prob)));
-            % Uniform margins version
-            obj.ThrDiagUni(iBt)=mean(abs(quantile(gp_cdf,Emp_Prob)-expinv(Emp_Prob)));
-            % Frechet margins version
-            frech_data=-1./log(gp_cdf);
-            obj.ThrDiagFre(iBt)=mean(abs(quantile(frech_data,Emp_Prob)-(-1./log(Emp_Prob))));
+            gp_cdf=MarginalModel.gpcdf(tYExc,obj.Shp(iBt,:),obj.Scl(AExc,iBt),obj.Thr(AExc,iBt));
+            MarginTypeEval={'Exponential','Frechet','Laplace','Uniform'};
+            for iMargin=1:numel(MarginTypeEval)
+                obj.MarginType=MarginTypeEval{iMargin};
+                % data on the margin
+                data_margin=obj.INV_Standard(gp_cdf);
+                model_data=quantile(data_margin,Emp_Prob);
+                % emp data
+                emp_data=obj.INV_Standard(Emp_Prob);
+                obj.ThrDiag(iBt,iMargin)=mean(abs(model_data-emp_data));
+            end
+            % rest back margin type 
+            obj.MarginType=tMarginType;
         end %Threshold_Diagnostic
         
         function Plot(obj)
@@ -1039,30 +1042,31 @@ classdef MarginalModel
         function PlotThresholdDiagnostic(obj)
             tidxNEP=repmat(1:obj.nBoot/obj.nReps,obj.nReps,1);
             idxNEP=tidxNEP(:);
-            unique_NEP=unique(obj.NEP);
-            OverallThrDiagExp=accumarray(idxNEP,obj.ThrDiagExp,[max(idxNEP), 1],@(x)(mean(x)));
-            OverallThrDiagUni=accumarray(idxNEP,obj.ThrDiagUni,[max(idxNEP), 1],@(x)(mean(x)));
-            OverallThrDiagLap=accumarray(idxNEP,obj.ThrDiagLap,[max(idxNEP), 1],@(x)(mean(x)));
-            OverallThrDiagFre=accumarray(idxNEP,obj.ThrDiagFre,[max(idxNEP), 1],@(x)(mean(x)));
+            unique_NEP=unique(obj.NEP);          
+            % metrics per margin 
+            OverallThrDiagExp=accumarray(idxNEP,obj.ThrDiag(:,1),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagFre=accumarray(idxNEP,obj.ThrDiag(:,2),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagLap=accumarray(idxNEP,obj.ThrDiag(:,3),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagUni=accumarray(idxNEP,obj.ThrDiag(:,4),[max(idxNEP), 1],@(x)(mean(x)));
             subplot(2,2,1)
             plot(unique_NEP,OverallThrDiagExp./sum(OverallThrDiagExp),'-ok','LineWidth',2);
             xlabel('Non Exceedance Probability');
-            ylabel('Metric');
+            ylabel('Standardised Metric');
             title('Threshold Diagnostic Metric: Exponential Margins');
             subplot(2,2,2)
             plot(unique_NEP,OverallThrDiagUni./sum(OverallThrDiagUni),'-ok','LineWidth',2);
             xlabel('Non Exceedance Probability');
-            ylabel('Metric');
+            ylabel('Standardised Metric');
             title('Threshold Diagnostic Metric: Uniform Margins');
             subplot(2,2,3)
             plot(unique_NEP,OverallThrDiagLap./sum(OverallThrDiagLap),'-ok','LineWidth',2);
             xlabel('Non Exceedance Probability');
-            ylabel('Metric');
+            ylabel('Standardised Metric');
             title('Threshold Diagnostic Metric: Laplace Margins');
             subplot(2,2,4)
             plot(unique_NEP,OverallThrDiagFre./sum(OverallThrDiagFre),'-ok','LineWidth',2);
             xlabel('Non Exceedance Probability');
-            ylabel('Metric');
+            ylabel('Standardised Metric');
             title('Threshold Diagnostic Metric: Frechet Margins');
             savePics(fullfile(obj.FigureFolder,sprintf('Stg3_%s_9_ThresholdDiagnostic',obj.RspSavLbl)))
         end %PlotThresholdDiagnostic
