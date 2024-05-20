@@ -40,11 +40,11 @@ main
 
 ## User guide
 
-More details of the code can be found in the covXtreme user guide document see covXtreme_UserGuide.pdf in the main repository folder.
+More details of the code can be found in the covXtreme user guide document see [covXtreme_UserGuide.pdf](https://github.com/sede-open/covXtreme/blob/main/covXtreme_UserGuide.pdf) in the main repository folder.
 
 ## Issues and suggestions
 
-Please see the Contributing.md in the main folder of the GitHub repository. 
+Please see the [Contributing.md](https://github.com/sede-open/covXtreme/blob/main/Contributing.md) in the main folder of the GitHub repository. 
 
 ## Contact
 
