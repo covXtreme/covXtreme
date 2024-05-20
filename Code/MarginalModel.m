@@ -804,10 +804,10 @@ classdef MarginalModel
                     PlotBinEdge(obj.Bn,iC);
                     PlotParameter(obj.Bn,obj.Scl,iC,'color','k','linewidth',2);
                     xlabel(obj.CvrLbl(iC))
-                    ylabel('\sigma')
+                    ylabel('\nu')
                 else   %if stationary, histogram
                     histogram(obj.Scl,'edgecolor','none','facecolor','k','normalization','pdf')
-                    xlabel('\sigma')
+                    xlabel('\nu')
                     ylabel('Empirical density');
                 end
                 title(sprintf('%s: GP scale',obj.RspLbl))
