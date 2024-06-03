@@ -360,8 +360,8 @@ classdef Contour
                     [GX,GY]=ndgrid(Grdx,Grdy);
                     G=[GX(:),GY(:)];
                     
-                    Ax=discretize(Cnt.Sml.Org(:,1),Grdx);  %returns indices of the bins (Grdx) that SmlOrg falls into
-                    Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Grdy);
+                    Ax=discretize(Cnt.Sml.Org(:,1),Edgx);  %returns indices of the bins (Grdx) that SmlOrg falls into
+                    Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Edgy);
                     
                     GrdInd=sub2ind([Cnt.nGrd Cnt.nGrd],Ax,Ay);
                     
@@ -373,8 +373,8 @@ classdef Contour
                     end
                     %% which bin is lock point in?
                     
-                    Lx=discretize(Lck(:,1),Grdx);
-                    Ly=discretize(Lck(:,2),Grdy);
+                    Lx=discretize(Lck(:,1),Edgx);
+                    Ly=discretize(Lck(:,2),Edgy);
                     L=sub2ind([Cnt.nGrd Cnt.nGrd],Lx,Ly);
                     
                     BW=Cnt.BndWdtScl.*(range(Cnt.Sml.Org(I,[1,iAsc+1])));
