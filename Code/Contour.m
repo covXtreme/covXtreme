@@ -233,6 +233,9 @@ classdef Contour
                         p_Loc_Up = sum(fog(I_gtLoc_Up))./sum(fog);
                         p_Loc_Dwn = sum(fog(I_gtLoc_Dwn))./sum(fog);
                         
+                        
+                        %TODO: add lock point to y_grd, what do we need to
+                        %add on x_grd?
                         % grid in main and associated
                         x_grd = Cnt.XRng(:,iB,iQ);
                         y_grd = linspace(min(SmlY),max((SmlY)),Cnt.nGrd)';
