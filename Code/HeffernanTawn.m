@@ -292,6 +292,15 @@ classdef HeffernanTawn
                 Sml.Org(:,iDmn)=Mrg(iDmn).INV(Sml.Unf(:,iDmn),Sml.I,Sml.A);
             end
             
+            %% Handle inf's
+            for iDmn=1:obj.nDmn
+                J = Sml.Unf(:,iDmn) == 1;
+                if any(J)
+                    Q = Survivor_Standard(Mrg(iDmn), Sml.StnMrg(J,iDmn));
+                    Sml.Org(J,iDmn) = INV_survivor(Mrg(iDmn),Q,Sml.I(J),Sml.A(J));
+                end
+            end
+            
         end %SimulateIS
         
         function Sml=SimulateMC(obj,Mrg,smlMethod,nRls,A,nA,RVX)

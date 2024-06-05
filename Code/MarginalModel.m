@@ -611,6 +611,47 @@ classdef MarginalModel
             end
         end %INV
         
+        function X=INV_survivor(obj,Q,I,A)
+            %Inverse CDF for marginal model using survival probability (empirical below threshold - GP above)
+            %% INPUTS
+            %Q survival probability
+            %I index of bootstraps to use
+            %A index of bins to use
+            %if I scalar --> case where finding inverse CDF in single bin
+            %if I vector --> case where inverse CDF in across sampled bins and bootstraps
+            %if P matrix --> case where finding inverse CDF for all bootstraps and bins
+            %% OUTPUTS
+            %X data on original margins 
+            X=NaN(size(Q));
+            p=size(Q);
+            if numel(I)==1
+                Cs=1; %scalar
+            elseif prod(p(2:end))>1
+                Cs=3; %matrix
+            else
+                Cs=2; %vector
+            end
+            if nargin<4
+                Cs=3;
+            end
+            
+            switch Cs
+                case 1 %I scalar --> case where finding inverse CDF in single bin
+                    X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(I),obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(A,I),obj.NEP(I));
+                    
+                case 2  %I vector --> case where inverse CDF in across sampled bins and bootstraps                  
+                    if obj.Bn.nBin==1
+                        X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(I),obj.Scl(I)',obj.Thr(I)',obj.Omg(I)',obj.Kpp(I)',obj.GmmLct,obj.NEP(I));
+                    else
+                        J=sub2ind([obj.Bn.nBin,obj.nBoot],A,I);
+                        X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(J),obj.Scl(J),obj.Thr(J),obj.Omg(J),obj.Kpp(J),obj.GmmLct(I),obj.NEP(I));
+                    end
+                    
+                case 3 %I matrix --> case where finding inverse CDF for all bootstraps and bins
+                    X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(I)',obj.Scl(:,I),obj.Thr(:,I),obj.Omg(:,I),obj.Kpp(:,I),obj.GmmLct,obj.NEP(I)');
+            end
+        end %INV_survivor
+        
         function X=INV_Standard(obj,P)
             %transform from uniform to standard margins
             %using inverse CDF
@@ -626,7 +667,7 @@ classdef MarginalModel
         end %INV_Standard
         
         function X=INV_Standard_survivor(obj,Q)
-            %transform (1-uniform) to standard margins
+            %transform to standard margins using survival probability
             %using inverse CDF
             switch obj.MarginType
                 case 'Gumbel'
@@ -637,7 +678,7 @@ classdef MarginalModel
                     error('Margin Type not recognised')
             end
             
-        end %INV_Standard
+        end %INV_Standard_survivor
         
         function P=CDF_Standard(obj,X)
             %transform from standard to uniform margins using CDF
@@ -650,6 +691,19 @@ classdef MarginalModel
                     error('Margin Type not recognised')
             end
         end %CDF_Standard
+        
+        function Q=Survivor_Standard(obj,X)
+            %transform from standard to uniform margins using survival
+            %probability
+            switch obj.MarginType
+                case 'Gumbel'
+                    Q = -expm1(-exp(-X));
+                case 'Laplace'
+                    Q = (X<=0) + 0.5*sign(X).*exp(-abs(X));
+                otherwise
+                    error('Margin Type not recognised')
+            end
+        end %Survivor_Standard
         
         function F=PDF_Standard(obj,X)
             %get probability density on standard margins
@@ -1160,6 +1214,23 @@ classdef MarginalModel
             X=bsxfun(@plus,bsxfun(@times,Sgm,t1), Thr);
         end %gpinv
         
+        function X=gpinvsurvivor(Q,Xi,Sgm,Thr)
+            %     X=gpinvsurvivor(Q,Xi,Sgm,Thr) returns the inverse of generalized Pareto (GP)
+            %     with tail index (shape) parameter Xi, scale parameter Sgm,
+            %     and threshold (location) parameter Thr, evaluated at the values in X using survival probability Q.
+            %     The size of Q is the common size of the input arguments.
+            
+            t1=bsxfun(@rdivide,bsxfun(@power,Q,-Xi)-1,Xi);
+            
+            %%Gumbel case
+            I=abs(Xi)<1e-5;
+            if any(I(:))
+                t1(I)=-log(Q(I));
+            end
+            
+            X=bsxfun(@plus,bsxfun(@times,Sgm,t1), Thr);
+        end %gpinvsurvivor
+        
         function F=gppdf(X,Xi,Sgm,Thr)
             %     F = gppdf(X,Xi,Sgm,Thr) returns the pdf of the generalized Pareto (GP)
             %     distribution with tail index (shape) parameter Xi, scale parameter Sgm,
@@ -1236,10 +1307,10 @@ classdef MarginalModel
         end %gpcdf
         
         function Q=gpsurvivor(X,Xi,Sgm,Thr)
-            %     Q=gpsurvivor(X,Xi,Sgm,Thr) returns the survivor functoin of the generalized Pareto (GP)
+            %     Q=gpsurvivor(X,Xi,Sgm,Thr) returns the survivor function of the generalized Pareto (GP)
             %     distribution with tail index (shape) parameter Xi, scale parameter Sgm,
             %     and threshold (location) parameter Thr, evaluated at the values in X.
-            %     The size of P is the common size of the input arguments.
+            %     The size of Q is the common size of the input arguments.
             Z=bsxfun(@rdivide,bsxfun(@minus,X,Thr),Sgm);
             t1=1+bsxfun(@times,Xi,Z);
             t1(t1<=0)=0;  %deal with upper end point of distribtion
@@ -1311,6 +1382,24 @@ classdef MarginalModel
             
             X = bsxfun(@plus,bsxfun(@times,q,Bet./Alp),GmmLct);
         end %gaminv
+        
+        function X=gaminvsurvivor(Q,Alp,Bet,GmmLct)
+            %     X = gaminv(Q,Alp,Bet,GmmLct)returns the inverse the gamma distribution using orthognal
+            %     parameterisation using survival probability
+
+            Q=bsxfun(@times,Q,ones(size(Alp)));
+            Alp=bsxfun(@times,Alp,ones(size(Q)));
+            
+            
+            q=NaN(size(Q));
+            
+            I=~isnan(Q) & Q<=1-1e-2;
+            q(I) = gammaincinv(1-Q(I),Alp(I));
+            I=~isnan(Q) & Q>1-1e-2;
+            q(I)= gammaincinv(Q(I),Alp(I),'upper');
+            
+            X = bsxfun(@plus,bsxfun(@times,q,Bet./Alp),GmmLct);
+        end %gaminvsurvivor
         
         function P=gamgpcdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
             %     P=gamgpcdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau) returns the cdf of the gamma-gp distribution
@@ -1397,6 +1486,24 @@ classdef MarginalModel
             X(IBlw)=X1(IBlw);
             X(~IBlw)=X2(~IBlw);
         end %gamgpinv
+        
+        function X=gamgpinvsurvivor(Q,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
+            %X=gamgpinv(Q,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau) returns the inv of
+            %the gamma-gp distribution using survival probability
+            
+            P=1-Q;
+            %gamma part
+            X1=MarginalModel.gaminvsurvivor(Q,Alp,Bet,GmmLct);
+            IBlw=P<(Tau.*ones(size(X1)));
+            
+            %gp part (adjust probabilities)
+            QGP=Q./(1-Tau);
+            X2=MarginalModel.gpinvsurvivor(QGP,Xi,Sgm,Thr);
+            
+            X=NaN(size(X1));
+            X(IBlw)=X1(IBlw);
+            X(~IBlw)=X2(~IBlw);
+        end %gamgpinvsurvivor
         
         
     end %methods

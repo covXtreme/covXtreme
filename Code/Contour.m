@@ -233,6 +233,9 @@ classdef Contour
                         p_Loc_Up = sum(fog(I_gtLoc_Up))./sum(fog);
                         p_Loc_Dwn = sum(fog(I_gtLoc_Dwn))./sum(fog);
                         
+                        
+                        %TODO: add lock point to y_grd, what do we need to
+                        %add on x_grd?
                         % grid in main and associated
                         x_grd = Cnt.XRng(:,iB,iQ);
                         y_grd = linspace(min(SmlY),max((SmlY)),Cnt.nGrd)';
@@ -360,8 +363,8 @@ classdef Contour
                     [GX,GY]=ndgrid(Grdx,Grdy);
                     G=[GX(:),GY(:)];
                     
-                    Ax=discretize(Cnt.Sml.Org(:,1),Grdx);  %returns indices of the bins (Grdx) that SmlOrg falls into
-                    Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Grdy);
+                    Ax=discretize(Cnt.Sml.Org(:,1),Edgx);  %returns indices of the bins (Grdx) that SmlOrg falls into
+                    Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Edgy);
                     
                     GrdInd=sub2ind([Cnt.nGrd Cnt.nGrd],Ax,Ay);
                     
@@ -373,8 +376,8 @@ classdef Contour
                     end
                     %% which bin is lock point in?
                     
-                    Lx=discretize(Lck(:,1),Grdx);
-                    Ly=discretize(Lck(:,2),Grdy);
+                    Lx=discretize(Lck(:,1),Edgx);
+                    Ly=discretize(Lck(:,2),Edgy);
                     L=sub2ind([Cnt.nGrd Cnt.nGrd],Lx,Ly);
                     
                     BW=Cnt.BndWdtScl.*(range(Cnt.Sml.Org(I,[1,iAsc+1])));
