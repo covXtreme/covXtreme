@@ -173,7 +173,8 @@ classdef Contour
         end %GetLockPoint
         
         function [EdgCnd, EdgAsc] = createEdg(Cnt, Mrg, iBin, iAsc, A)
-            % create edges for HTdensity contour that include the lockpoint
+            % create edges for HTdensity contour such that the lockpoint is
+            % in the centre of two edges
             arguments
                 Cnt   Contour
                 Mrg   MarginalModel
@@ -275,12 +276,9 @@ classdef Contour
                         %add on x_grd?
                         % grid in main and associated
                         x_grd = Cnt.XRng(:,iB,iQ);
-                        %y_grd = linspace(min(SmlY),max((SmlY)),Cnt.nGrd)';
                         
                         % P(X>x)
                         P_x = sum((x_grd>SmlX').*fog',2)./sum(fog);
-                        % P(Y>y|X>x)
-                        %P_ygx = nan(Cnt.nGrd,Cnt.nPnt);
                         for iG = Cnt.nPnt:-1:1
                             I_x = SmlX(:,1)>x_grd(iG);
                             if any(I_x)
@@ -296,9 +294,6 @@ classdef Contour
                                     lock_point = YDw(iG+1,iAsc);
                                     up_x0 = YUp(iG+1,iAsc);
                                 end
-                                
-                                % funDW = @(y)(Cnt.WeightedCDF(y,SmlY(I_x),fog(I_x)).*(1-P_x(iG)')/p_Loc_Dwn - 1);
-                                % YDwOLD(iG,iAsc) = fzero(funDW, dw_x0, optsDw);
                                 
                                 if iG == Cnt.nPnt
                                     YDw(iG,iAsc) = lock_point;
@@ -334,24 +329,9 @@ classdef Contour
                                 end
                                 delta_opt = fzero(f,0,optsUp);
                                 YUp(iG,iAsc) = lock_point + delta_opt;
-
-
-                                % funDW = @(y)(abs((Cnt.WeightedCDF(y,SmlY(I_x),fog(I_x)).*(1-P_x(iG)'))/p_Loc_Dwn - 1)+eps(1)*abs(y-dw_x0));
-                                % YDw(iG,iAsc) = fminsearch(funDW, dw_x0, optsDw);
-                                % funUP = @(y)(abs((1-Cnt.WeightedCDF(y,SmlY(I_x),fog(I_x))).*(1-P_x(iG)')/p_Loc_Up - 1)+eps(1)*abs(y-dw_x0));
-                                % YUp(iG,iAsc) = fminsearch(funUP, up_x0, optsUp);
                             end
                             
                         end %iG
-                        
-                        % find y_Dw closest to this probability level
-                        %tJnt=(P_ygx).*(1-P_x'); %joint Prb(Y>y,X>x) for a sequence of values of x
-                        %YDw(:,iAsc)=Cnt.exceedanceSmooth(tJnt,y_grd,p_Loc_Dwn); % using linear interpolation (produces smoother output)
-                        
-                        % find y_Up closest to this probability level                        
-                        %tJnt=(1-P_ygx).*(1-P_x'); %joint Prb(Y<=y,X>x) for a sequence of values of x
-                        %YUp(:,iAsc)=Cnt.exceedanceSmooth(tJnt,y_grd,p_Loc_Up); % using linear interpolation (produces smoother output)
-                        
                     end %iAsc
                     
                     %store the 2 parts of the contour (up and down) together
@@ -1067,8 +1047,8 @@ classdef Contour
         
         function Edg = addPointToLinspace(m, M, P, nGrd)
             %Edg = addPointToLinspace(m, M, LockPoint, nGrd)
-            % Add P to linspace between m and M with minimal changes to the
-            % stepsize
+            % Adapt linspace between m and M to include P as centre of two 
+            % consecutive points with minimal changes to the stepsize
             
             arguments
                 m(1,1)
@@ -1078,10 +1058,6 @@ classdef Contour
             end
             
             stepsize = (M - m) / nGrd;
-%             steps = max(1,floor((P - m) / stepsize));
-%             newstepsize = (P - m) / steps;
-%             Edg = m + (1:nGrd+1) * newstepsize;
-            
             steps = max(1, floor((P - m)/stepsize - 1/2));
             newstepsize = (P - m) / (steps + 1/2);
             Edg = m + (0:nGrd) * newstepsize;
