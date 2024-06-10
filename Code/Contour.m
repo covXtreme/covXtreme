@@ -1059,6 +1059,13 @@ classdef Contour
             steps = max(1, floor((P - m)/stepsize - 1/2));
             newstepsize = (P - m) / (steps + 1/2);
             Edg = m + (0:nGrd) * newstepsize;
+            
+            
+            if Edg(end) < M
+                warning(sprintf("Grid in Heffernan-Tawn density contour might not cover full range, consider one of two choices:\n" + ...
+                    "\t(1): Increase nGrd setting in OptionsContours; \n"+ ...
+                    "\t(2): Decrease maxAscRng in OptionsContours.")) %#ok<SPWRN>
+            end
         end % addPointToLinspace
     end %methods (Static)
 end %end class Contour
