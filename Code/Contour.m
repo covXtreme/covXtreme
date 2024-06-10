@@ -1052,7 +1052,7 @@ classdef Contour
                 m(1,1)
                 M(1,1)
                 P(1,1) {mustBeGreaterThanOrEqual(P,m),mustBeLessThanOrEqual(P,M)}
-                nGrd(1,1) {mustBe.PositiveInteger}
+                nGrd(1,1) {mustBePositive,mustBeInteger}
             end
             
             stepsize = (M - m) / nGrd;
