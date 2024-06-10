@@ -17,6 +17,7 @@ classdef OptionsContours
         BndWdtScl=0.02; %Band width scale for HTDns contour     
         Mth={};         %Cell array of set of contour Methods to use
         nSml=1e6;       %Number to simulate: number of importance samples to use
+        maxAscRng=2;    %Maximum extrapolation "maxAscRng * range" of Asc variable to compute contour on
     end %properties
     
     methods
@@ -48,6 +49,12 @@ classdef OptionsContours
         function obj=set.BndWdtScl(obj,BndWdtScl)            
             validateattributes(BndWdtScl,{'numeric'},{'positive','scalar'});
             obj.BndWdtScl=BndWdtScl;            
+        end %set.BndWdtScl
+        
+        % Check valid input for BndWdtScl
+        function obj=set.maxAscRng(obj,maxAscRng)            
+            validateattributes(maxAscRng,{'numeric'},{'positive','scalar'});
+            obj.maxAscRng=maxAscRng;            
         end %set.BndWdtScl
         
         % Check valid input for Mth
