@@ -236,9 +236,7 @@ classdef Contour
                 for iB=1:nBinsplsOmni
                     % pre-allocate
                     YDw = nan(Cnt.nPnt,Cnt.nAsc);
-                    YDwNew = nan(Cnt.nPnt,Cnt.nAsc);
                     YUp = nan(Cnt.nPnt,Cnt.nAsc);
-                    YUpNew = nan(Cnt.nPnt,Cnt.nAsc);
                     % loop over associated variables
                     for iAsc = 1:Cnt.nAsc
                         %lock point not defined for this bin/return level combo
