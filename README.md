@@ -26,7 +26,7 @@ observations with the same covariate bin are assumed to have common extreme valu
 roughness-penalised maximum likelihood estimation using a generalised Pareto (GP) model above the threshold and gamma below. The extremal dependence structure between the variates on a transformed standard scale (Gumbel or Laplace) is then estimated using a conditional extremes model, also piecewise non-stationary with respect to covariates. Different approaches to contour estimation,
 generally reliant on simulation under the fitted models, are outlined.
 
-More theoretical details of the code and respective models can be found in the following submitted paper: [covXtreme: MATLAB software for non-stationary penalised piecewise constant marginal and conditional extreme value models](https://arxiv.org/abs/2309.172950). This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB. 
+More theoretical details of the code and respective models can be found in the following submitted paper: [covXtreme: MATLAB software for non-stationary penalised piecewise constant marginal and conditional extreme value models]([https://www.sciencedirect.com/science/article/pii/S1364815224000963]). This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB. 
 
 ## Repository overview
 
