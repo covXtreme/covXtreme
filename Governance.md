@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2023 Shell Global Solutions International B.V. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # covXtreme Project Governance
 
 covXtreme is a project of the [Linux Foundation (LF) Energy](https://lfenergy.org/). The covXtreme project maintains a Technical Steering Committee (TSC), which has final authority over the project. As defined in the project charter, TSC responsibilities include, but are not limited to:

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2023 Shell Global Solutions International B.V. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # covXtreme - repository for the penalised piecewise constant covariate marginal and conditional extreme value models that allows for contour estimation
 
 ## Background
