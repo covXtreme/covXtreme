@@ -18,7 +18,7 @@ load('Output/Bin','Bn')  %load bins from Stage 2
 %
 iDmn=1;  %which dimension to fit marginal model to
 %
-NEP=[0.7,0.9];  %GP non exceedence probability range
+NEP=[0.2,0.9];  %GP non exceedence probability range
 nB=100;   %number bootstrap resamples
 Yrs=34;  %number of years of data
 RtrPrd=[10,100]; %vector of return Periods

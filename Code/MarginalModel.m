@@ -93,7 +93,7 @@ classdef MarginalModel
             % - CV cross validation structure with control parameters
             % - MarginType, 'Gumbel', 'Laplace' (default is Laplace)
             % - nReps number of replicated bootstrap samples if nRep=1,
-            % defaults to ranodm sampling of the NEP range
+            % defaults to random sampling of the NEP range
             %% OUTPUTS:
             % - obj, Marginal Model class containing details of data and
             % fitted piecewise constant marginal model
@@ -149,12 +149,12 @@ classdef MarginalModel
                 obj.RtrPrd=sort(RtrPrd);
             end
             % validate margin type
-            if nargin>=9
+            if nargin>=8
                 validateattributes(MarginType,{'string','char'},{},'MarginalModel','MarginType',9)
                 obj.MarginType = validatestring(MarginType,{'Gumbel','Laplace'});
             end
             % validate margin type
-            if nargin>=9
+            if nargin>=10
                 validateattributes(nReps,{'numeric'},{'vector','positive'},'MarginalModel','nReps',10)
                 obj.nReps = nReps;
             end
@@ -715,7 +715,7 @@ classdef MarginalModel
             obj.PlotQQ;
             
             %% Threshold uncertianty
-            if obj.nBoot>1 && numel(unique(obj.NEP))>1
+            if obj.nBoot > 1 && numel(unique(obj.NEP))>1
                 figure(7);
                 clf;
                 obj.PlotThresholdStability;
@@ -727,9 +727,11 @@ classdef MarginalModel
             obj.PlotRV;
             
             %% Threshold diagnostic plot
-            figure(9);
-            clf;
-            obj.PlotThresholdDiagnostic;
+            if obj.nReps > 1
+                figure(9);
+                clf;
+                obj.PlotThresholdDiagnostic;
+            end
             
         end %Plot
         
