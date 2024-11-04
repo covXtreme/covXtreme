@@ -18,10 +18,11 @@ load('Output/Bin','Bn')  %load bins from Stage 2
 %
 iDmn=1;  %which dimension to fit marginal model to
 %
-NEP=[0.2,0.9];  %GP non exceedence probability range
+NEP=[0.1,0.9];  %GP non exceedence probability range
 nB=100;   %number bootstrap resamples
 Yrs=34;  %number of years of data
 RtrPrd=[10,100]; %vector of return Periods
+nReps=10; %number of replicated bootstraps to help determine the threshold in the case where the threshold range is decided nReps should be set equal to 1  
 
 %% Cross Validation defaults (Optional can specify some or all of these)
 CV.CVMth=0;     %0 Only Cross Validate smoothness for original dataset (fast);
@@ -35,7 +36,7 @@ CV.SmthUB=4;   %upper bound (log10)  for smmothness range
 MarginType='Laplace'; %Laplace or Gumbel
 
 %% Fit model
-MM=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType);
+MM=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType,nReps);
 
 %% Save result
 if ~exist('Output','dir')

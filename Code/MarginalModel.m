@@ -653,6 +653,7 @@ classdef MarginalModel
             % Evalulation of Murphy et al (2024) and Varty (Exponential
             % margins version)
             % Results are visualised in PlotThresholdDiagnostic
+            % Threshold metric is shown on 4 different margins
             %% INPUTS
             %iBt: index for the bootsrap sample
             %tY: sample of data points
