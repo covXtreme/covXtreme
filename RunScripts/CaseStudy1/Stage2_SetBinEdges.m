@@ -31,3 +31,6 @@ Bn=CovariateBinning(Dat.X,BinEdg,Dat.IsPrd,Dat.Y,Dat.RspLbl,Dat.CvrLbl);
 
 %% Save bin Edges
 save('Output/Bin','Bn')
+
+%% Optional: Plot storm trajectories by bin.
+%TrajectoryPlot(Dat.Y, Dat.StrTrj, Dat.RspLbl, Dat.CvrLbl, Bn, 'Stg2_Data_StormTrajectory')
