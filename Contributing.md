@@ -36,6 +36,9 @@ There are a few conventions that have developed over time around packages:
 
 ## How Can I Contribute?
 
+### Getting Started
+In order to starting contributing you can fork the repository and make any changes to the code. Once you are satisfied with the changes made to the code, they can be merged into the main branch of the repository through a pull request.
+
 ### Potential Enhancements 
 * Multivariate diagnostics such as the coefficient of tail dependence e.g., eta, chi and chibar.
 * Choice of optimal bin edges - a potential approach would be to use reversible-jump Markov chain Monte Carlo.
