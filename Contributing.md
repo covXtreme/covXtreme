@@ -37,7 +37,7 @@ There are a few conventions that have developed over time around packages:
 ## How Can I Contribute?
 
 ### Getting Started
-In order to starting contributing you can fork the repository and make any changes to the code. Once you are satisfied with the changes made to the code, they can be merged into the main branch of the repository through a pull request.
+In order to starting contributing you can fork the repository and make any changes to the code. Once you are satisfied with the changes made to the code, they can be merged into the main branch of the repository through a pull request. More details can be found here: https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project
 
 ### Potential Enhancements 
 * Multivariate diagnostics such as the coefficient of tail dependence e.g., eta, chi and chibar.
