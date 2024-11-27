@@ -1,7 +1,7 @@
 % Copyright © [2023] Shell Global Solutions International B.V. All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
-function Dat=PeakPicking(Rsp,Cvr,Asc,IsPrd,NEP,RspLbl,CvrLbl)
+function Dat=PeakPicking(Rsp,Cvr,Asc,IsPrd,NEP,RspLbl,CvrLbl, IsStrTrj)
 %function [YPk,XAss]=PeakPickingY,X,NEP);
 %% INPUTS
 % Rsp     [n x 1] vector of main response 
@@ -26,6 +26,7 @@ nAsc=size(Asc,2); %number of associated variables
 validateattributes(NEP, {'numeric'},{'scalar','>=',0,'<=',1},'PeakPick','NEP',5);
 validateattributes(RspLbl, {'cell'},{'numel',nAsc+1},'PeakPick','RspLbl',6);
 validateattributes(CvrLbl, {'cell'},{'numel',nCvr},'PeakPick','CvrLbl',7);
+validateattributes(IsStrTrj, {'numeric'},{'scalar','binary'},'PeakPick','IsStrTrj',8);
 
 %remove any nans in orginal data.
 I=isnan(Rsp) | any(isnan(Cvr),2) | any(isnan(Asc),2);
@@ -59,6 +60,7 @@ nExc=max(Ind); %number of exceedences
 RspExc=Rsp(IExc);
 CvrExc=Cvr(IExc,:);
 AscExc=Asc(IExc,:);
+
 %% find storm peak maximum index
 maxInd=accumarray(Ind,RspExc,[],@findmax,NaN); %index of maxima within storm
 SSCnt=accumarray(Ind,Ind,[],@numel,NaN); %sea state count per storm
@@ -70,9 +72,30 @@ Dat.Y=NaN(nExc,1+nAsc); %Initialise empty response matrix
 Dat.Y(:,1)=RspExc(maxIndOrg); %maxima within storm
 Dat.Y(:,2:end)=AscExc(maxIndOrg,:); %value of associated response @ maxima
 Dat.X=CvrExc(maxIndOrg,:);  %value of covariate (direction) @ maxima
+Dat.StrTrj.RA=cell(nExc,1+nAsc); %Initialise empty cell array for storm trajectories
+Dat.StrTrj.Cvr=cell(nExc, nCvr); %Initialise empty cell array for covariate trajectories.
 Dat.RspLbl=RspLbl; %response label
 Dat.CvrLbl=CvrLbl; %covariate label
 Dat.IsPrd=IsPrd;  %periodic covariate flag
+
+%% For each storm peak, get its trajectory.
+for i = 1:nExc
+    % Find the start and end of each storm
+    startIdx = Prd(i, 1); % start of the storm
+    endIdx = Prd(i, 2);   % end of the storm
+    
+    % Extract the storm trajectory within the storm period
+    stormRsp = Rsp(startIdx:endIdx);  % Response trajectory
+    stormAsc = Asc(startIdx:endIdx, :);  % Associated variables trajectory
+    stormCvr = Cvr(startIdx:endIdx, :); % Covariates
+    
+    % Store the storm trajectory
+    Dat.StrTrj.RA{i, 1} = stormRsp; % Store response trajectory
+    for iA = 1:nAsc
+        Dat.StrTrj.RA{i, iA+1} = stormAsc(:, iA);  % Store associated variables trajectory
+        Dat.StrTrj.Cvr{i, iA} = stormCvr(:, iA);
+    end
+end
 
 nDmn=size(Dat.Y,2);
 %% Plotting

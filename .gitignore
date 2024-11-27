@@ -21,5 +21,6 @@ slprj/
 octave-workspace
 
 *.jpg
+*.png
 
 Thumbs.db
