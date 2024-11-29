@@ -826,7 +826,6 @@ classdef HeffernanTawn
             % first column of BinPOpZ default is [] i.e. not used
             %Output
             %ZSamp nSmp x nDmn location of the chosen index
-           
             if nargin<5
                 Z=[];
             end
