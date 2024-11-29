@@ -46,6 +46,3 @@ else
     end
 end
 save('Output\Data','Dat');
-
-%% 
-%TrajectoryPlot(Dat.Y, Dat.StrTrj, RspLbl, CvrLbl, [], 'Stg1_Data_StormTrajectory')

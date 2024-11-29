@@ -2,7 +2,6 @@
 % SPDX-License-Identifier: Apache-2.0
 
 function Dat=PeakPicking(Rsp,Cvr,Asc,IsPrd,NEP,RspLbl,CvrLbl, IsStrTrj)
-%function [YPk,XAss]=PeakPickingY,X,NEP);
 %% INPUTS
 % Rsp     [n x 1] vector of main response 
 % Cvr     [n x nCvr] matrix of covariates (e.g. direction, season)
@@ -72,30 +71,9 @@ Dat.Y=NaN(nExc,1+nAsc); %Initialise empty response matrix
 Dat.Y(:,1)=RspExc(maxIndOrg); %maxima within storm
 Dat.Y(:,2:end)=AscExc(maxIndOrg,:); %value of associated response @ maxima
 Dat.X=CvrExc(maxIndOrg,:);  %value of covariate (direction) @ maxima
-Dat.StrTrj.RA=cell(nExc,1+nAsc); %Initialise empty cell array for storm trajectories
-Dat.StrTrj.Cvr=cell(nExc, nCvr); %Initialise empty cell array for covariate trajectories.
 Dat.RspLbl=RspLbl; %response label
 Dat.CvrLbl=CvrLbl; %covariate label
 Dat.IsPrd=IsPrd;  %periodic covariate flag
-
-%% For each storm peak, get its trajectory.
-for i = 1:nExc
-    % Find the start and end of each storm
-    startIdx = Prd(i, 1); % start of the storm
-    endIdx = Prd(i, 2);   % end of the storm
-    
-    % Extract the storm trajectory within the storm period
-    stormRsp = Rsp(startIdx:endIdx);  % Response trajectory
-    stormAsc = Asc(startIdx:endIdx, :);  % Associated variables trajectory
-    stormCvr = Cvr(startIdx:endIdx, :); % Covariates
-    
-    % Store the storm trajectory
-    Dat.StrTrj.RA{i, 1} = stormRsp; % Store response trajectory
-    for iA = 1:nAsc
-        Dat.StrTrj.RA{i, iA+1} = stormAsc(:, iA);  % Store associated variables trajectory
-        Dat.StrTrj.Cvr{i, iA} = stormCvr(:, iA);
-    end
-end
 
 nDmn=size(Dat.Y,2);
 %% Plotting

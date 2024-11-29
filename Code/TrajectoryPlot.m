@@ -1,4 +1,4 @@
-function TrajectoryPlot2(Y, Trj, RspLbl, CvrLbl, Bn, FilNam)
+function TrajectoryPlot(Y, Trj, RspLbl, CvrLbl, Bn, FilNam)
 
 if isempty(Bn)
     nAscp1 = size(Trj.RA, 2);
