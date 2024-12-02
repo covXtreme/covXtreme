@@ -12,11 +12,9 @@
 % WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 % See the License for the specific language governing permissions and
 % limitations under the License.
-
 clear; clc; close all;
-%% Stage 1: Peak-picking
-% Extract peaks data 
 
+%% Stage6_StormTrajectorySimulation
 %% Load time-series data
 load('..\CNS_mo_response')
 
@@ -30,19 +28,28 @@ Asc=[wave.tp_sea];  %associated variable(s)
 NEP=0.7; %non-exceedence quantile level used to set peak picking threshold
 IsStrTrj = 1; % Set to 1 to allow the use of storm trajectories.
 
-%% Peak Picking
-if ~exist(fullfile(cd,'Figures'),'dir')
-    mkdir('Figures')
-end
-Dat=PeakPicking(Rsp,Cvr,Asc,IsPrdCvr,NEP,RspLbl,CvrLbl,IsStrTrj);
-
-%% Save
-if ~exist('Output','dir')
-    mkdir('Output')
-else
-    F=cellstr(ls('Output/*.mat'));
-    if numel(F)>0
-       warning('Existing files in output directory') 
+% load peak picked data set
+load('Output/Data','Dat')
+load('Output/Bin','Bn')  %load bins from Stage 2
+% Load and combine marginal models
+FM=cellstr(ls('Output/MM*.mat'));
+for iM=1:numel(FM) %load all marginal models
+    load(sprintf('Output/MM%g',iM),'MM');
+    if iM==1
+        Mrg=MM;
+    else
+        Mrg=cat(1,Mrg,MM);
     end
+    clear MM;
 end
-save('Output\Data','Dat');
+%% Storm trajectory options
+
+%% Run storm trajectory simulation
+StrTrj=StormTrajectorySimulation(Rsp,Asc,Cvr,Dat,Bn,Mrg);
+
+%% Save result
+if ~exist('Output','dir')
+   mkdir('Output') 
+end
+save('Output/StrTrj','StrTrj');
+
