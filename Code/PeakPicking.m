@@ -74,6 +74,7 @@ Dat.X=CvrExc(maxIndOrg,:);  %value of covariate (direction) @ maxima
 Dat.RspLbl=RspLbl; %response label
 Dat.CvrLbl=CvrLbl; %covariate label
 Dat.IsPrd=IsPrd;  %periodic covariate flag
+Dat.Prd=Prd; %storm periods: col1=start of storm; col2=end of storm
 
 nDmn=size(Dat.Y,2);
 %% Plotting
