@@ -19,14 +19,13 @@ clear; clc; close all;
 load('..\CNS_mo_response')
 
 %% Parameters
-RspLbl={'Hs','Tp'}; %main and associated variable labels
-CvrLbl={'Direction'}; %covariate labels
 Rsp=wave.hs;  %main response data
 Cvr=[wave.dm];  %covariate data (e.g. direction, season, location)
-IsPrdCvr=1;  %flag dictating periodicity of covariate(s). If 1, covariate data loops on 360. When have >1 covariate, this is a vector input e.g. [1,0].   
 Asc=[wave.tp_sea];  %associated variable(s)   
-NEP=0.7; %non-exceedence quantile level used to set peak picking threshold
-IsStrTrj = 1; % Set to 1 to allow the use of storm trajectories.
+
+TrajectoryOptions=struct;
+TrajectoryOptions.nSml=10; % 1 x 1, number of simulations
+TrajectoryOptions.nNgh=10; %Number of near neighbour historical storm trajectories to consider
 
 % load peak picked data set
 load('Output/Data','Dat')
@@ -45,7 +44,7 @@ end
 %% Storm trajectory options
 
 %% Run storm trajectory simulation
-StrTrj=StormTrajectorySimulation(Rsp,Asc,Cvr,Dat,Bn,Mrg);
+StrTrj=StormTrajectorySimulation(Rsp,Asc,Cvr,Dat,Bn,Mrg,TrajectoryOptions);
 
 %% Save result
 if ~exist('Output','dir')
