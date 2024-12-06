@@ -31,6 +31,7 @@ classdef StormTrajectorySimulation
             %     - Dat.IsPrd   nCvr x 1 vector if covairte is periodic or not
             %     - Dat.CvrLbl    char string for response label
             %     - Dat.RspLbl    char string for response label
+            % Bn bin allocation structure from stage 2
             % Mrg 2 x 1, marginal model structure *output from stage 3
             % Opts Options for the storm trajectory class object 
             if nargin == 0
@@ -108,6 +109,10 @@ classdef StormTrajectorySimulation
         
         function obj=CreateStormTrajectoryBinAllocation(obj,Bn)
             % CreateStormTrajectoryBinAllocation(obj)
+            % from the bin allocation determine the bins of the historical
+            % trajectories 
+            % INPUTS
+            % Bn bin allocation structure from stage 2
             fprintf(1,'Calculating bin allocations for historical trajectories.\n');
             obj.A=cell(Bn.n,obj.nAsc);
             for iBn=1:Bn.n
@@ -121,6 +126,7 @@ classdef StormTrajectorySimulation
         
         function obj=SimulateEventSet(obj, Mrg)
             %obj=SimulateEventSet(obj, Mrg)
+            % simulate a number of trajectories
             % INPUT
             % Mrg 2 x 1, marginal model structure *output from stage 3
             obj.Sml=cell(obj.nSml,1);
@@ -135,8 +141,8 @@ classdef StormTrajectorySimulation
             % Match using the dominant variate only, and in the covariate bin
             % corresponding to the dominant variate only.
             % INPUT
-            % Dat structure from stage 1
-            % Bn structure from stage 2
+            % Dat peak picked data structure from stage 1
+            % Bn bin allocation structure from stage 2
             fprintf(1,'Storm matching to allocate historical trajectories to simulated storms:\n');
             iE=0;
             for iS=1:obj.nSml
@@ -206,14 +212,13 @@ classdef StormTrajectorySimulation
             end
         end
         function obj=plotStormTrajectories(obj,Y, TrjRA, TrjCvr, tFilNam, LblRA, LblCvr)
-            nPk = size(Y, 1);
-            [peakOrder, colorMap] = obj.getPeakOrderAndColorMap(Y(:, 1), nPk);
-            
+            % Wrapper function to plot the storm trajectories
+            [peakOrder, colorMap] = obj.getPeakOrderAndColorMap(Y(:, 1));
             clf;
             for isNormalised = [true, false]
                 subplot(2, 1, 1 + ~isNormalised)
                 hold on;
-                for iPk = 1:nPk
+                for iPk = 1:obj.nDat
                     peakIndex = peakOrder(iPk);
                     stormRsp = TrjRA{peakIndex, 1};
                     if any(isnan(stormRsp))
@@ -258,18 +263,26 @@ classdef StormTrajectorySimulation
     end %methods
     
     methods (Static)
-        function [peakOrder, colorMap] = getPeakOrderAndColorMap(peakValues, nPk)
+        function [peakOrder, colorMap] = getPeakOrderAndColorMap(peakValues)
+            % Function to select colour ranges depending on the number of
+            % peaks
+            % INPUTS
+            % peakValues  nDat x 1 array of storm peak values 
             [~, peakOrder] = sort(peakValues, 'descend');
-            colorMap = jet(nPk);
+            colorMap = jet(size(peakValues,1));
             colorMap = colorMap(end:-1:1, :);
         end %getPeakOrderAndColorMap
         
         function CntStrCvr = adjustCovariate(CntStrCvr)
+            % Function to center covariate values for a storm peak
+            % INPUTS
+            % Covariate centered around the storm peak covariate
             CntStrCvr(CntStrCvr < -180) = CntStrCvr(CntStrCvr < -180) + 360;
             CntStrCvr(CntStrCvr > 180) = CntStrCvr(CntStrCvr > 180) - 360;
         end %adjustCovariate
         
         function [titleStr, xlabelStr, ylabelStr, xlimits] = getPlotProperties(isNormalised, TrjCvr, LblRA, LblCvr)
+            % Generate properties for storm trajectory plotting 
             if isNormalised
                 titleStr = sprintf('%s: Normalised Storm Trajectories', LblRA);
                 ylabelStr = 'Normalised Response (Max=1)';

@@ -25,7 +25,7 @@ Asc=[wave.tp_sea];  %associated variable(s)
 
 TrajectoryOptions=struct;
 TrajectoryOptions.nSml=10; % 1 x 1, number of simulations
-TrajectoryOptions.nNgh=10; %Number of near neighbour historical storm trajectories to consider
+TrajectoryOptions.nNgh=10; % umber of near neighbour historical storm trajectories to consider
 
 % load peak picked data set
 load('Output/Data','Dat')
