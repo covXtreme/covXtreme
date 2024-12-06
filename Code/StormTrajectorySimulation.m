@@ -102,7 +102,7 @@ classdef StormTrajectorySimulation
                 end %iAsc
             end %iDat
             
-            TrajectoryPlot(obj,Dat.Y, obj, Dat.RspLbl, Dat.CvrLbl, [], 'Stg6_Data_StormTrajectory')
+            TrajectoryPlot(obj, Dat, [], 'Stg6_StormTrajectory');
             
         end %IdentifyStormTrajectories
         
@@ -158,24 +158,32 @@ classdef StormTrajectorySimulation
                     obj.Sml{iS}.StrTrj.RA{iR,:}=obj.RA{tMtc,:};
                     obj.Sml{iS}.StrTrj.Cvr{iR,:}=obj.Cvr{tMtc,:};
                     obj.Sml{iS}.StrTrj.A{iR,:}=obj.A{tMtc,:};
-                    %Dgn(iE,:)=[max(StrTrj.RA{tMtc,1}) obj.Sml{iS}.Org(iR) obj.Sml{iS}.A(iR)];
                 end %iR
             end %iS
             
+           %TrajectoryPlot(obj,Dat, [], 'Stg6_Data_StormTrajectory_Simulated');
+            
         end %StormMatching
         
-        function obj=TrajectoryPlot(obj, Y, Trj, RspLbl, CvrLbl, Bn, FilNam)
+        function obj=TrajectoryPlot(obj, Dat, Bn, FilNam)
+            %% Storm trajectory plot
+            % Match using the dominant variate only, and in the covariate bin
+            % corresponding to the dominant variate only.
+            % INPUT
+            % Dat structure from stage 1
+            % Bn structure from stage 2
+            % FlNm character string for the filename
             fprintf(1,'Creating trajectory plot.\n');
             if isempty(Bn)
-                nAscp1 = size(Trj.RA, 2);               
+                nAscp1 = size(obj.RA, 2);               
                 for iA = 1:nAscp1
                     % Plot without covariate
-                    tFilNam = sprintf('%s_%s_Time', FilNam, RspLbl{iA});
-                    obj.plotStormTrajectories(Y, Trj.RA(:, iA), [], tFilNam, RspLbl{iA}, '');
+                    tFilNam = sprintf('%s_%s_Time', FilNam, Dat.RspLbl{iA});
+                    obj.plotStormTrajectories(Dat.Y, obj.RA(:, iA), [], tFilNam, Dat.RspLbl{iA}, '');
                     
                     for iC = 1:obj.nCvr
-                        tFilNam = sprintf('%s_%s_%s', FilNam, RspLbl{iA}, CvrLbl{iC});
-                        obj.plotStormTrajectories(Y, Trj.RA(:, iA), Trj.Cvr(:, iC), tFilNam, RspLbl{iA}, CvrLbl{iC});
+                        tFilNam = sprintf('%s_%s_%s', FilNam, Dat.RspLbl{iA}, Dat.CvrLbl{iC});
+                        obj.plotStormTrajectories(Dat.Y, obj.RA(:, iA), obj.Cvr(:, iC), tFilNam, Dat.RspLbl{iA}, Dat.CvrLbl{iC});
                     end %iC
                 end %iA
             else
@@ -184,14 +192,14 @@ classdef StormTrajectorySimulation
                     nAscp1 = size(Trj.RA, 2);                   
                     for iA = 1:nAscp1
                         % Plot without covariate
-                        tFilNam = sprintf('%s_%s_Bin%g_Time', FilNam, RspLbl{iA}, iB);
-                        tRsp = sprintf('%s:%s', RspLbl{iA}, Bn.BinLbl{iB});
-                        obj.plotStormTrajectories(Y(Bn.A==iB,1), Trj.RA(Bn.A==iB, iA), [], tFilNam, tRsp, '');
+                        tFilNam = sprintf('%s_%s_Bin%g_Time', FilNam, Dat.RspLbl{iA}, iB);
+                        tRsp = sprintf('%s:%s', Dat.RspLbl{iA}, Bn.BinLbl{iB});
+                        obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), obj.RA(Bn.A==iB, iA), [], tFilNam, tRsp, '');
                         
                         for iC = 1:obj.nCvr
-                            tFilNam = sprintf('%s_%s_Bin%g_%s', FilNam, RspLbl{iA}, iB, CvrLbl{iC});
-                            tRsp = sprintf('%s:%s', RspLbl{iA}, Bn.BinLbl{iB});
-                            obj.plotStormTrajectories(Y(Bn.A==iB,1), Trj.RA(Bn.A==iB, iA), Trj.Cvr(Bn.A==iB, iC), tFilNam, tRsp, CvrLbl{iC});
+                            tFilNam = sprintf('%s_%s_Bin%g_%s', FilNam, Dat.RspLbl{iA}, iB, Dat.CvrLbl{iC});
+                            tRsp = sprintf('%s:%s', Dat.RspLbl{iA}, Bn.BinLbl{iB});
+                            obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), obj.RA(Bn.A==iB, iA), obj.Cvr(Bn.A==iB, iC), tFilNam, tRsp, Dat.CvrLbl{iC});
                         end%iC
                     end %iA
                 end %iB
@@ -266,7 +274,7 @@ classdef StormTrajectorySimulation
                 titleStr = sprintf('%s: Normalised Storm Trajectories', LblRA);
                 ylabelStr = 'Normalised Response (Max=1)';
             else
-                titleStr = 'Unnormalised Storm Trajectories';
+                titleStr =sprintf('%s: Unnormalised Storm Trajectories', LblRA);
                 ylabelStr = 'Unnormalised Response';
             end
             if isempty(TrjCvr)
