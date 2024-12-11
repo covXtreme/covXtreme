@@ -64,9 +64,9 @@ classdef StormTrajectorySimulation
             end
             
             obj=IdentifyStormTrajectories(obj,Dat,Rsp,Asc,Cvr);
-            
-            obj=CreateStormTrajectoryBinAllocation(obj,Bn);
-            
+                       
+            obj=CreateStormTrajectoryBinAllocation(obj,Dat,Bn);
+                      
             obj=SimulateEventSet(obj,Mrg);
             
             obj=StormMatching(obj,Dat,Bn);
@@ -104,14 +104,15 @@ classdef StormTrajectorySimulation
             end %iDat
             
             TrajectoryPlot(obj, Dat, [], 'Stg6_StormTrajectory');
-            
+                       
         end %IdentifyStormTrajectories
         
-        function obj=CreateStormTrajectoryBinAllocation(obj,Bn)
+        function obj=CreateStormTrajectoryBinAllocation(obj,Dat,Bn)
             % CreateStormTrajectoryBinAllocation(obj)
             % from the bin allocation determine the bins of the historical
             % trajectories 
             % INPUTS
+            % Dat structure from stage 1
             % Bn bin allocation structure from stage 2
             fprintf(1,'Calculating bin allocations for historical trajectories.\n');
             obj.A=cell(Bn.n,obj.nAsc);
@@ -122,6 +123,8 @@ classdef StormTrajectorySimulation
                 tBn=BinAllocation(Bn,tCvr, 0);
                 obj.A{iBn,:}=tBn.A(1:size(tStrTrjCvr,1));
             end %iS
+            
+            TrajectoryPlot(obj, Dat, Bn, 'Stg6_StormTrajectory');
         end %CreateStormTrajectoryBinAllocation
         
         function obj=SimulateEventSet(obj, Mrg)
@@ -143,7 +146,7 @@ classdef StormTrajectorySimulation
             % INPUT
             % Dat peak picked data structure from stage 1
             % Bn bin allocation structure from stage 2
-            fprintf(1,'Storm matching to allocate historical trajectories to simulated storms:\n');
+            fprintf(1,'Storm matching to allocate historical trajectories to simulated storms.\n');
             iE=0;
             for iS=1:obj.nSml
                 for iR=1:obj.Sml{iS}.nRls
@@ -193,9 +196,8 @@ classdef StormTrajectorySimulation
                     end %iC
                 end %iA
             else
-                
                 for iB=1:Bn.nBin
-                    nAscp1 = size(Trj.RA, 2);                   
+                    nAscp1 = size(obj.RA, 2);                   
                     for iA = 1:nAscp1
                         % Plot without covariate
                         tFilNam = sprintf('%s_%s_Bin%g_Time', FilNam, Dat.RspLbl{iA}, iB);
@@ -215,10 +217,12 @@ classdef StormTrajectorySimulation
             % Wrapper function to plot the storm trajectories
             [peakOrder, colorMap] = obj.getPeakOrderAndColorMap(Y(:, 1));
             clf;
+            nPk=size(Y,1);
             for isNormalised = [true, false]
                 subplot(2, 1, 1 + ~isNormalised)
                 hold on;
-                for iPk = 1:obj.nDat
+                
+                for iPk = 1:nPk
                     peakIndex = peakOrder(iPk);
                     stormRsp = TrjRA{peakIndex, 1};
                     if any(isnan(stormRsp))
