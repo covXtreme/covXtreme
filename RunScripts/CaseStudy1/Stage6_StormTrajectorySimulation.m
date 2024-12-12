@@ -19,10 +19,7 @@ clear; clc; close all;
 load('..\CNS_mo_response')
 
 %% Parameters
-Rsp=wave.hs;  %main response data
 Cvr=[wave.dm];  %covariate data (e.g. direction, season, location)
-Asc=[wave.tp_sea];  %associated variable(s)   
-
 TrajectoryOptions=struct;
 TrajectoryOptions.nSml=10; % 1 x 1, number of simulations
 TrajectoryOptions.nNgh=10; % umber of near neighbour historical storm trajectories to consider
