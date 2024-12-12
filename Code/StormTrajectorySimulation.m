@@ -141,8 +141,8 @@ classdef StormTrajectorySimulation
             [obj.Sml.A,obj.Sml.Org]=deal(NaN(nStr,1));
             for iS=1:obj.nSml
                 tSml=sample_MC(Mrg(1),nStrVec(iS));
-                obj.Sml.A(SmlIndex==iS,:)=tSml.A;
-                obj.Sml.Org(SmlIndex==iS,:)=tSml.Org;
+                obj.Sml.A(obj.Sml.SmlIndex==iS,:)=tSml.A;
+                obj.Sml.Org(obj.Sml.SmlIndex==iS,:)=tSml.Org;
             end %iS
             for iS=1:obj.nSml
                 nStr = poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs);
