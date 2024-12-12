@@ -258,7 +258,6 @@ classdef StormTrajectorySimulation
                         plot(xData, yData, 'Color', colorMap(iPk, :), 'LineWidth', 0.5, 'LineStyle', ':', 'Marker', '.', 'MarkerSize', 10);
                     end
                 end%iPk
-                
                 % Axis labels and title
                 [titleStr, xlabelStr, ylabelStr, xlimits] = obj.getPlotProperties(isNormalised, TrjCvr, LblRA, LblCvr);
                 xlabel(xlabelStr);
@@ -269,9 +268,17 @@ classdef StormTrajectorySimulation
                 axis tight;
                 if ~isempty(xlimits)
                     xlim(xlimits);
+                end 
+                colormap('jet') 
+                colorbar; 
+                if isNormalised
+                    caxis([0 1]);
+                else
+                    caxis([min(Y(:, 1)) max(Y(:, 1))]);
                 end
                 hold off;
             end %isNormalised
+            
             savePics(fullfile('Figures', tFilNam));
         end %plotStormTrajectories
         
