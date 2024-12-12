@@ -132,11 +132,22 @@ classdef StormTrajectorySimulation
             % simulate a number of trajectories
             % INPUT
             % Mrg 2 x 1, marginal model structure *output from stage 3
-            obj.Sml=cell(obj.nSml,1);
+            %poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs,10,1)
+            % TODO move from cell structure to tabular 
+            nStrVec=poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs,10,1);
+            nStr=sum(nStrVec);
+            obj.Sml=struct;
+            obj.Sml.SmlIndex=repelem(1:10,nStrVec)';
+            [obj.Sml.A,obj.Sml.Org]=deal(NaN(nStr,1));
+            for iS=1:obj.nSml
+                tSml=sample_MC(Mrg(1),nStrVec(iS));
+                obj.Sml.A(SmlIndex==iS,:)=tSml.A;
+                obj.Sml.Org(SmlIndex==iS,:)=tSml.Org;
+            end %iS
             for iS=1:obj.nSml
                 nStr = poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs);
-                obj.Sml{iS}=sample_MC(Mrg(1),nStr); %This is input to storm matching
-            end %iSml
+                obj.Sml{iS}=sample_MC(Mrg(1),nStrV); %This is input to storm matching
+            end %iS
         end %SimulateEventSet
         
         function obj=StormMatching(obj,Dat,Bn)
