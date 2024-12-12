@@ -19,12 +19,10 @@ classdef StormTrajectorySimulation
     end %properties
     
     methods
-        function obj=StormTrajectorySimulation(Rsp,Asc,Cvr,Dat,Bn,Mrg,Opts)
+        function obj=StormTrajectorySimulation(Cvr, Dat,Bn,Mrg,Opts)
             % wrapper function for StormTrajectorySimulation class
             %INPUT
-            % Rsp     [n x 1] vector of main response 
             % Cvr     [n x nCvr] matrix of covariates (e.g. direction, season)
-            % Asc     [n x nAsc] matrix of other associated variables 
             % Dat structure  (from stage 1)
             %     - Dat.X     nDat x nCvr  covariate values
             %     - Dat.Y     nDat x nDmn  response data (Y)
@@ -37,33 +35,38 @@ classdef StormTrajectorySimulation
             if nargin == 0
                 return
             end
-            if nargin>=7  && ~isempty(Opts)
+            if nargin>=5  && ~isempty(Opts)
                 if isfield(Opts,'nSml')
-                    validateattributes(Opts.nSml, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.nSml',7);
+                    validateattributes(Opts.nSml, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.nSml',5);
                     obj.nSml=Opts.nSml;
                 end %nSml
                 if isfield(Opts,'nNgh')
-                    validateattributes(Opts.nNgh, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.nNgh',7);
+                    validateattributes(Opts.nNgh, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.nNgh',5);
                     obj.nNgh=Opts.nNgh;
                 end %nNgh
                 if isfield(Opts,'RtrPrd')
-                    validateattributes(Opts.RtrPrd, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.RtrPrd',7);
+                    validateattributes(Opts.RtrPrd, {'numeric'},{'scalar','positive'},'StormTrajectorySimulation','Opts.RtrPrd',5);
                     obj.RtrPrd=Opts.RtrPrd;
                 end %nNgh
                 if isfield(Opts,'DistanceMetric')
-                    validateattributes(DistanceMetric,{'string','char'},{},'StormTrajectorySimulation','Opts.DistanceMetric',7)
+                    validateattributes(DistanceMetric,{'string','char'},{},'StormTrajectorySimulation','Opts.DistanceMetric',5)
                     obj.DistanceMetric = validatestring(Opts.DistanceMetric,{'Square','Absolute'});
                 end
             end
             [obj.nDat,obj.nCvr]=size(Dat.X);
+            
+            if sum(contains(fieldnames(Dat),'StrTrj'))==0
+                error('Storm trajectory needs to be run in stage 2.')
+            end
+           
             if ~isa(Mrg,'MarginalModel')
-                error('Mrg should be a nDmn x 1 Marginal Model')
+                error('Mrg should be a nDmn x 1 Marginal Model.')
             end
             if numel(Mrg)<=1
-                error('Mrg should be a nDmn x 1 Marginal Model')
+                error('Mrg should be a nDmn x 1 Marginal Model.')
             end
             
-            obj=IdentifyStormTrajectories(obj,Dat,Rsp,Asc,Cvr);
+            obj=IdentifyStormTrajectories(obj,Cvr,Dat);
                        
             obj=CreateStormTrajectoryBinAllocation(obj,Dat,Bn);
                       
@@ -72,37 +75,13 @@ classdef StormTrajectorySimulation
             obj=StormMatching(obj,Dat,Bn);
         end %StormTrajectorySimulation
         
-        function obj=IdentifyStormTrajectories(obj,Dat,Rsp,Asc,Cvr)
+        function obj=IdentifyStormTrajectories(obj,Cvr,Dat)
             % obj=IdentifyStormTrajectories(obj,Dat)
             % Function to separate out each storm trajectory
             % INPUT
             % Dat structure from stage 1
-            % Rsp     [n x 1] vector of main response 
-            % Cvr     [n x nCvr] matrix of covariates (e.g. direction, season)
-            % Asc     [n x nAsc] matrix of other associated variables 
-            obj.nAsc=size(Asc,2);
-            obj.RA=cell(obj.nDat,1+obj.nAsc); %Initialise empty cell array for storm trajectories
-            obj.Cvr=cell(obj.nDat, obj.nCvr); %Initialise empty cell array for covariate trajectories.
-            
-            %% For each storm peak, get its trajectory.
-            for iDat = 1:obj.nDat
-                % Find the start and end of each storm
-                startIdx = Dat.Prd(iDat, 1); % start of the storm
-                endIdx = Dat.Prd(iDat, 2);   % end of the storm
-                
-                % Extract the storm trajectory within the storm period
-                stormRsp = Rsp(startIdx:endIdx);  % Response trajectory
-                stormAsc = Asc(startIdx:endIdx, :);  % Associated variables trajectory
-                stormCvr = Cvr(startIdx:endIdx, :); % Covariates
-                
-                % Store the storm trajectory
-                obj.RA{iDat, 1} = stormRsp; % Store response trajectory
-                for iA = 1:obj.nAsc
-                    obj.RA{iDat, iA+1} = stormAsc(:, iA);  % Store associated variables trajectory
-                    obj.Cvr{iDat, iA} = stormCvr(:, iA);
-                end %iAsc
-            end %iDat
-            
+            obj.RA=Dat.StrTrj.RA;
+            obj.Cvr=Cvr;
             TrajectoryPlot(obj, Dat, [], 'Stg6_StormTrajectory');
                        
         end %IdentifyStormTrajectories
@@ -118,10 +97,10 @@ classdef StormTrajectorySimulation
             obj.A=cell(Bn.n,obj.nAsc);
             for iBn=1:Bn.n
                 tCvr=zeros(Bn.n,1);
-                tStrTrjCvr=obj.Cvr{iBn,:};
+                tStrTrjCvr=Dat.StrTrj.Cvr{iBn,:};
                 tCvr(1:size(tStrTrjCvr,1))=tStrTrjCvr;
                 tBn=BinAllocation(Bn,tCvr, 0);
-                obj.A{iBn,:}=tBn.A(1:size(tStrTrjCvr,1));
+                Dat.StrTrj.A{iBn,:}=tBn.A(1:size(tStrTrjCvr,1));
             end %iS
             
             TrajectoryPlot(obj, Dat, Bn, 'Stg6_StormTrajectory');
@@ -139,11 +118,11 @@ classdef StormTrajectorySimulation
             obj.Sml=struct;
             obj.Sml.SmlIndex=repelem(1:10,nStrVec)';
             [obj.Sml.A,obj.Sml.Org]=deal(NaN(nStr,1));
-            for iS=1:obj.nSml
-                tSml=sample_MC(Mrg(1),nStrVec(iS));
-                obj.Sml.A(obj.Sml.SmlIndex==iS,:)=tSml.A;
-                obj.Sml.Org(obj.Sml.SmlIndex==iS,:)=tSml.Org;
-            end %iS
+            %for iS=1:obj.nSml
+            %    tSml=sample_MC(Mrg(1),nStrVec(iS));
+            %    obj.Sml.A(obj.Sml.SmlIndex==iS,:)=tSml.A;
+            %    obj.Sml.Org(obj.Sml.SmlIndex==iS,:)=tSml.Org;
+            %end %iS
             for iS=1:obj.nSml
                 nStr = poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs);
                 obj.Sml{iS}=sample_MC(Mrg(1),nStrV); %This is input to storm matching
@@ -199,11 +178,11 @@ classdef StormTrajectorySimulation
                 for iA = 1:nAscp1
                     % Plot without covariate
                     tFilNam = sprintf('%s_%s_Time', FilNam, Dat.RspLbl{iA});
-                    obj.plotStormTrajectories(Dat.Y, obj.RA(:, iA), [], tFilNam, Dat.RspLbl{iA}, '');
+                    obj.plotStormTrajectories(Dat.Y, Dat.StrTrj.RA(:, iA), [], tFilNam, Dat.RspLbl{iA}, '');
                     
                     for iC = 1:obj.nCvr
                         tFilNam = sprintf('%s_%s_%s', FilNam, Dat.RspLbl{iA}, Dat.CvrLbl{iC});
-                        obj.plotStormTrajectories(Dat.Y, obj.RA(:, iA), obj.Cvr(:, iC), tFilNam, Dat.RspLbl{iA}, Dat.CvrLbl{iC});
+                        obj.plotStormTrajectories(Dat.Y, Dat.StrTrj.RA(:, iA), Dat.StrTrj.Cvr(:, iC), tFilNam, Dat.RspLbl{iA}, Dat.CvrLbl{iC});
                     end %iC
                 end %iA
             else
@@ -213,12 +192,12 @@ classdef StormTrajectorySimulation
                         % Plot without covariate
                         tFilNam = sprintf('%s_%s_Bin%g_Time', FilNam, Dat.RspLbl{iA}, iB);
                         tRsp = sprintf('%s:%s', Dat.RspLbl{iA}, Bn.BinLbl{iB});
-                        obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), obj.RA(Bn.A==iB, iA), [], tFilNam, tRsp, '');
+                        obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), Dat.StrTrj.RA(Bn.A==iB, iA), [], tFilNam, tRsp, '');
                         
                         for iC = 1:obj.nCvr
                             tFilNam = sprintf('%s_%s_Bin%g_%s', FilNam, Dat.RspLbl{iA}, iB, Dat.CvrLbl{iC});
                             tRsp = sprintf('%s:%s', Dat.RspLbl{iA}, Bn.BinLbl{iB});
-                            obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), obj.RA(Bn.A==iB, iA), obj.Cvr(Bn.A==iB, iC), tFilNam, tRsp, Dat.CvrLbl{iC});
+                            obj.plotStormTrajectories(Dat.Y(Bn.A==iB,1), Dat.StrTrj.RA(Bn.A==iB, iA), Dat.StrTrj.Cvr(Bn.A==iB, iC), tFilNam, tRsp, Dat.CvrLbl{iC});
                         end%iC
                     end %iA
                 end %iB
@@ -272,9 +251,9 @@ classdef StormTrajectorySimulation
                 colormap('jet') 
                 colorbar; 
                 if isNormalised
-                    caxis([0 1]);
+                   caxis([0 1]);
                 else
-                    caxis([min(Y(:, 1)) max(Y(:, 1))]);
+                    caxis([min(cellfun(@min,TrjRA)) max(cellfun(@max,TrjRA))]);
                 end
                 hold off;
             end %isNormalised

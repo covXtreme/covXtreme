@@ -44,7 +44,7 @@ end
 %% Storm trajectory options
 
 %% Run storm trajectory simulation
-StrTrj=StormTrajectorySimulation(Rsp,Asc,Cvr,Dat,Bn,Mrg,TrajectoryOptions);
+StrTrj=StormTrajectorySimulation(Cvr,Dat,Bn,Mrg,TrajectoryOptions);
 
 %% Save result
 if ~exist('Output','dir')
