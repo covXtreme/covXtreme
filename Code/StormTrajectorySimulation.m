@@ -14,6 +14,7 @@ classdef StormTrajectorySimulation
         
         nSml=10; % 1 x 1, number of simulations
         nStr; % 1 x 1, number of simulated storms
+        nStrThinned=1000; % 1 x 1 number of thinned simulated storms
         nNgh=10; %Number of near neighbour historical storm trajectories to consider
         RtrPrd=100; % nRtr x 1 Return Period  in years
         DistanceMetric='Square'; % distance metric either Square or Absolute 
@@ -138,9 +139,9 @@ classdef StormTrajectorySimulation
             % obj.Sml.StrTrj (struct)
             fprintf(1,'Storm matching to allocate historical trajectories to simulated storms.\n');
             obj.Sml.StrTrj=struct;
-            obj.Sml.StrTrj.RspLbl=Dat.RspLbl(1);
-            obj.Sml.StrTrj.CvrLbl=Dat.CvrLbl(1);
-            obj.
+            obj.Sml.RspLbl=Dat.RspLbl(1);
+            obj.Sml.CvrLbl=Dat.CvrLbl;
+            obj.Sml.Y=obj.Sml.Org(:,1);
             for iS=1:obj.nStr
                     tBn=obj.Sml.A(iS); %bin for realisation iR from simulation iS
                     tMB=find(Bn.A==tBn);%all historical matched with correct bin allocation
@@ -161,9 +162,24 @@ classdef StormTrajectorySimulation
                     obj.Sml.StrTrj.StormId{iS,:}=iS*ones(numel(Dat.StrTrj.RA{tMtc,:}),1);
             end %iS
            
-           TrajectoryPlot(obj, obj, [], 'Stg6_Data_StormTrajectory_Simulated');
+           TrajectoryPlot(obj, obj.Sml, [], 'Stg6_Data_StormTrajectory_Simulated');
+           
+           obj=BinAllocationSimulation(obj, Bn); 
+           TrajectoryPlot(obj, obj.Sml, obj.Sml.Bn, 'Stg6_Data_StormTrajectory_Simulated');
             
         end %StormMatching
+        
+        function obj=BinAllocationSimulation(obj, Bn)
+            % Function to populate covariate binning function with the
+            % simulated storms
+            % INPUT
+            % Bn structure from stage 2
+            fprintf(1,'Determining bin allocation for the simulated storms.\n');
+            obj.Sml.Bn=Bn;
+            obj.Sml.Bn.A=obj.Sml.A;
+            obj.Sml.Bn.Cnt=accumarray(obj.Sml.A,obj.Sml.A,[Bn.nBin,1],@numel);
+            obj.Sml.Bn.n=numel(obj.Sml.A);
+        end % BinAllocationSimulation
         
         function obj=TrajectoryPlot(obj, Dat, Bn, FilNam)
             %% Storm trajectory plot
@@ -174,8 +190,12 @@ classdef StormTrajectorySimulation
             % Bn structure from stage 2
             % FlNm character string for the filename
             fprintf(1,'Creating trajectory plot.\n');
+            if contains(FilNam,'Simulated')
+                nAscp1=1;
+            else
+                nAscp1 = size(obj.RA, 2);  
+            end
             if isempty(Bn)
-                nAscp1 = size(obj.RA, 2);               
                 for iA = 1:nAscp1
                     % Plot without covariate
                     tFilNam = sprintf('%s_%s_Time', FilNam, Dat.RspLbl{iA});
@@ -187,8 +207,7 @@ classdef StormTrajectorySimulation
                     end %iC
                 end %iA
             else
-                for iB=1:Bn.nBin
-                    nAscp1 = size(obj.RA, 2);                   
+                for iB=1:Bn.nBin             
                     for iA = 1:nAscp1
                         % Plot without covariate
                         tFilNam = sprintf('%s_%s_Bin%g_Time', FilNam, Dat.RspLbl{iA}, iB);
@@ -204,15 +223,21 @@ classdef StormTrajectorySimulation
                 end %iB
             end
         end
+        
         function obj=plotStormTrajectories(obj,Y, TrjRA, TrjCvr, tFilNam, LblRA, LblCvr)
             % Wrapper function to plot the storm trajectories
-            [peakOrder, colorMap] = obj.getPeakOrderAndColorMap(Y(:, 1));
             clf;
-            nPk=size(Y,1);
+            nPk=size(Y,1); 
+            if contains(tFilNam,'Simulated')
+                if obj.nStrThinned < nPk
+                    fprintf(1,'Thinning simulated storms for plotting.\n');
+                    nPk=obj.nStrThinned;
+                end
+            end
+            [peakOrder, colorMap] = obj.getPeakOrderAndColorMap(Y(1:nPk, 1));
             for isNormalised = [true, false]
                 subplot(2, 1, 1 + ~isNormalised)
                 hold on;
-                
                 for iPk = 1:nPk
                     peakIndex = peakOrder(iPk);
                     stormRsp = TrjRA{peakIndex, 1};
