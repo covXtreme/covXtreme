@@ -13,6 +13,7 @@ classdef StormTrajectorySimulation
         nAsc      % 1 x 1, number of associated variables
         
         nSml=10; % 1 x 1, number of simulations
+        nStr; % 1 x 1, number of simulated storms
         nNgh=10; %Number of near neighbour historical storm trajectories to consider
         RtrPrd=100; % nRtr x 1 Return Period  in years
         DistanceMetric='Square'; % distance metric either Square or Absolute 
@@ -68,7 +69,7 @@ classdef StormTrajectorySimulation
             
             obj=IdentifyStormTrajectories(obj,Cvr,Dat);
                        
-            obj=CreateStormTrajectoryBinAllocation(obj,Dat,Bn);
+            [obj,Dat]=CreateStormTrajectoryBinAllocation(obj,Dat,Bn);
                       
             obj=SimulateEventSet(obj,Mrg);
             
@@ -86,13 +87,15 @@ classdef StormTrajectorySimulation
                        
         end %IdentifyStormTrajectories
         
-        function obj=CreateStormTrajectoryBinAllocation(obj,Dat,Bn)
+        function [obj,Dat]=CreateStormTrajectoryBinAllocation(obj,Dat,Bn)
             % CreateStormTrajectoryBinAllocation(obj)
             % from the bin allocation determine the bins of the historical
             % trajectories 
             % INPUTS
             % Dat structure from stage 1
             % Bn bin allocation structure from stage 2
+            % OUTPUT
+            % Dat structure from stage 1 updated with bin allocation
             fprintf(1,'Calculating bin allocations for historical trajectories.\n');
             obj.A=cell(Bn.n,obj.nAsc);
             for iBn=1:Bn.n
@@ -112,20 +115,15 @@ classdef StormTrajectorySimulation
             % INPUT
             % Mrg 2 x 1, marginal model structure *output from stage 3
             %poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs,10,1)
-            % TODO move from cell structure to tabular 
             nStrVec=poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs,10,1);
-            nStr=sum(nStrVec);
+            obj.nStr=sum(nStrVec);
             obj.Sml=struct;
             obj.Sml.SmlIndex=repelem(1:10,nStrVec)';
-            [obj.Sml.A,obj.Sml.Org]=deal(NaN(nStr,1));
-            %for iS=1:obj.nSml
-            %    tSml=sample_MC(Mrg(1),nStrVec(iS));
-            %    obj.Sml.A(obj.Sml.SmlIndex==iS,:)=tSml.A;
-            %    obj.Sml.Org(obj.Sml.SmlIndex==iS,:)=tSml.Org;
-            %end %iS
+            [obj.Sml.A,obj.Sml.Org]=deal(NaN(obj.nStr,1));
             for iS=1:obj.nSml
-                nStr = poissrnd(Mrg(1).nDat*obj.RtrPrd/Mrg(1).Yrs);
-                obj.Sml{iS}=sample_MC(Mrg(1),nStrV); %This is input to storm matching
+                tSml=sample_MC(Mrg(1),nStrVec(iS));
+                obj.Sml.A(obj.Sml.SmlIndex==iS,:)=tSml.A;
+                obj.Sml.Org(obj.Sml.SmlIndex==iS,:)=tSml.Org;
             end %iS
         end %SimulateEventSet
         
@@ -136,14 +134,17 @@ classdef StormTrajectorySimulation
             % INPUT
             % Dat peak picked data structure from stage 1
             % Bn bin allocation structure from stage 2
+            % OUTPUT
+            % obj.Sml.StrTrj (struct)
             fprintf(1,'Storm matching to allocate historical trajectories to simulated storms.\n');
-            iE=0;
-            for iS=1:obj.nSml
-                for iR=1:obj.Sml{iS}.nRls
-                    iE=iE+1;
-                    tBn=obj.Sml{iS}.A(iR); %bin for realisation iR from simulation iS
+            obj.Sml.StrTrj=struct;
+            obj.Sml.StrTrj.RspLbl=Dat.RspLbl(1);
+            obj.Sml.StrTrj.CvrLbl=Dat.CvrLbl(1);
+            obj.
+            for iS=1:obj.nStr
+                    tBn=obj.Sml.A(iS); %bin for realisation iR from simulation iS
                     tMB=find(Bn.A==tBn);%all historical matched with correct bin allocation
-                    difference_matched=Dat.Y(tMB,1)-obj.Sml{iS}.Org(iR);
+                    difference_matched=Dat.Y(Bn.A==tBn,1)-obj.Sml.Org(iS);
                     switch obj.DistanceMetric
                         case 'Square'
                             [~,tD2]=sort((difference_matched).^2);
@@ -154,13 +155,13 @@ classdef StormTrajectorySimulation
                     end
                     tMV=tMB(tD2(1:obj.nNgh));
                     tMtc=tMV(randi(obj.nNgh,1));
-                    obj.Sml{iS}.StrTrj.RA{iR,:}=obj.RA{tMtc,:};
-                    obj.Sml{iS}.StrTrj.Cvr{iR,:}=obj.Cvr{tMtc,:};
-                    obj.Sml{iS}.StrTrj.A{iR,:}=obj.A{tMtc,:};
-                end %iR
+                    obj.Sml.StrTrj.RA{iS,:}=Dat.StrTrj.RA{tMtc,:};
+                    obj.Sml.StrTrj.Cvr{iS,:}=Dat.StrTrj.Cvr{tMtc,:};
+                    obj.Sml.StrTrj.A{iS,:}=Dat.StrTrj.A{tMtc,:};
+                    obj.Sml.StrTrj.StormId{iS,:}=iS*ones(numel(Dat.StrTrj.RA{tMtc,:}),1);
             end %iS
-            
-           %TrajectoryPlot(obj,Dat, [], 'Stg6_Data_StormTrajectory_Simulated');
+           
+           TrajectoryPlot(obj, obj, [], 'Stg6_Data_StormTrajectory_Simulated');
             
         end %StormMatching
         
