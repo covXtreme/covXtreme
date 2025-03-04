@@ -1408,7 +1408,7 @@ classdef MarginalModel
             %           Thr=MarginalModel.gaminv(Tau,Alp,Bet,GmmLct);
             IBlw=X<Thr;
             %gamma part
-            P1=MarginalModel.gamcdf(X,Alp,Bet,GmmLct);
+            P1=MarginalModel.gamcdf(X,Alp,Bet,GmmLct) .* Tau ./ MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct);
             % mjj 08/11/18: I think tau scaling for Gamma was missing:
             % added it.
             %gp part
@@ -1428,7 +1428,7 @@ classdef MarginalModel
             %           Thr=MarginalModel.gaminv(Tau,Alp,Bet,GmmLct);
             IBlw=X<Thr;
             %gamma part
-            P1=MarginalModel.gamsurvivor(X,Alp,Bet,GmmLct);
+            P1=MarginalModel.gamsurvivor(X,Alp,Bet,GmmLct) .* Tau ./ MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct);
             % mjj 08/11/18: I think tau scaling for Gamma was missing:
             % added it.
             %gp part
@@ -1445,7 +1445,7 @@ classdef MarginalModel
             %threshold
             IBlw=bsxfun(@le,X,Thr);
             %gamma part
-            f1=MarginalModel.gampdf(X,Alp,Bet,GmmLct);
+            f1=MarginalModel.gampdf(X,Alp,Bet,GmmLct) .* Tau ./ MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct); %TODO: here
             %gp part
             f2=MarginalModel.gppdf(X,Xi,Sgm,Thr).*(1-Tau);
             %combine
@@ -1460,7 +1460,7 @@ classdef MarginalModel
             %threshold
             IBlw=X<=Thr;
             %gamma part
-            f1=MarginalModel.loggampdf(X,Alp,Bet,GmmLct);
+            f1=MarginalModel.loggampdf(X,Alp,Bet,GmmLct) + log(Tau) - log(MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct)); %TODO: here
             %gp part
             f2=MarginalModel.loggppdf(X,Xi,Sgm,Thr)+log((1-Tau));
             %combine
@@ -1474,7 +1474,10 @@ classdef MarginalModel
             %X=gamgpinv(P,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau) returns the inv of the gamma-gp distribution
             
             %gamma part
-            X1=MarginalModel.gaminv(P,Alp,Bet,GmmLct);
+            PGam=P.*MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct)./Tau;
+            PGam(PGam>1)=1;
+            PGam(PGam<0)=0;
+            X1=MarginalModel.gaminv(PGam,Alp,Bet,GmmLct);
             IBlw=P<(Tau.*ones(size(X1)));
             
             %gp part (adjust probabilities)
@@ -1493,7 +1496,10 @@ classdef MarginalModel
             
             P=1-Q;
             %gamma part
-            X1=MarginalModel.gaminvsurvivor(Q,Alp,Bet,GmmLct);
+            QGam = Q.*MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct)./Tau + (Tau - MarginalModel.gamcdf(Thr,Alp,Bet,GmmLct))./Tau;
+            QGam(QGam>1) = 1;
+            QGam(QGam<0) = 0;
+            X1=MarginalModel.gaminvsurvivor(QGam,Alp,Bet,GmmLct); %TODO: here
             IBlw=P<(Tau.*ones(size(X1)));
             
             %gp part (adjust probabilities)
