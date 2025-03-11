@@ -23,4 +23,15 @@ octave-workspace
 *.jpg
 *.png
 
+*.mat
+
 Thumbs.db
+
+RunScripts/CaseStudy1/Figures/*.mat
+RunScripts/CaseStudy1/Output/*.mat
+
+RunScripts/CaseStudy1/Figures/*.mat
+RunScripts/CaseStudy1/Output/*.mat
+
+/RunScripts/CaseStudy1/Figures/*.mat
+/RunScripts/CaseStudy2/Figures/*.mat

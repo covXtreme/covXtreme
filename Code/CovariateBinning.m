@@ -84,6 +84,9 @@ classdef CovariateBinning
             %    Bn [n x 1] bin allocation
             %% OUTPUTS
             %    Bn populated Bn object
+            if nargin<3
+                iVrb=1;
+            end
             Bn.nBinCvr=NaN(Bn.nCvr,1); %number of bins
             ADmn=NaN(Bn.n, Bn.nCvr);  %bin allocation for each dimension
             for iC=1:Bn.nCvr %loop over covariates
