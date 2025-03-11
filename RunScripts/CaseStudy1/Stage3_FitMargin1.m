@@ -36,7 +36,7 @@ iDmn=1;  %which dimension to fit marginal model to
 NEP=[0.7,0.9];  %GP non exceedence probability range
 nB=100;   %number bootstrap resamples
 Yrs=34;  %number of years of data
-RtrPrd=[10,100]; %vector of return Periods
+RtrPrd=[100]; %vector of return Periods
 
 %% Cross Validation defaults (Optional can specify some or all of these)
 CV.CVMth=0;     %0 Only Cross Validate smoothness for original dataset (fast);
@@ -58,3 +58,11 @@ if ~exist('Output','dir')
 end
 save(sprintf('Output/MM%g',iDmn),'MM')
 
+RtrPrd=100;
+nRls = poissrnd(2319*RtrPrd/Yrs);
+Sml=sample_MC(MM,nRls);
+
+subplot(1,2,1)
+histogram(Sml.Org);
+subplot(1,2,2)
+histogram(Dat.Y(:,1));
