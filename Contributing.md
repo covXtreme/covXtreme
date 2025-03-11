@@ -1,14 +1,19 @@
+<!--
+SPDX-FileCopyrightText: 2023 Shell Global Solutions International B.V. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+-->
 # Contributing to covXtreme
 
 First off, thanks for taking the time to contribute!
 
-The following is a set of guidelines for contributing to *covXtreme* and its packages. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
+The following is a set of guidelines for contributing to *covXtreme* and its packages. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request. For further information about how the repository please the governance page: [Governance.md](https://github.com/sede-open/covXtreme/blob/main/Governance.md) 
 
 ## What should I know before I get started?
 
 *covXtreme* is model and software for estimation of environmental design contours using the conditional extremes model of Heffernan and Tawn [2004].
 
-More theoretical details of the model can be found in https://www.sciencedirect.com/science/article/abs/pii/S0029801819303798. This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB.
+More theoretical details of the model can be found in https://www.sciencedirect.com/science/article/pii/S1364815224000963. This work was part-funded by the European Union ERA-NET project entitled “Environmental Contours for SAfe DEsign of Ships and other marine structures (ECSADES). The code is all written in MATLAB.
 
 The code is constantly developing and we will ensure to maintain that it is up to date and make clear any changes that may have an impact of the end user.
 
@@ -30,6 +35,9 @@ There are a few conventions that have developed over time around packages:
     * *Stage5_Contour* - estimation of environmental contours.
 
 ## How Can I Contribute?
+
+### Getting Started
+In order to starting contributing you can fork the repository and make any changes to the code. Once you are satisfied with the changes made to the code, they can be merged into the main branch of the repository through a pull request. More details can be found here: https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project
 
 ### Potential Enhancements 
 * Multivariate diagnostics such as the coefficient of tail dependence e.g., eta, chi and chibar.
