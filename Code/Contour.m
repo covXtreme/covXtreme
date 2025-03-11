@@ -26,6 +26,8 @@ classdef Contour
         SmtWdtC; %Smoothing width for the huseby contour C function
         BndWdtScl; %Band width scale for HTDns contour
         nSml; %Number of Simulations
+        
+        maxAscRng=2;
     end
     
     methods  
@@ -66,6 +68,7 @@ classdef Contour
             Cnt.BndWdtScl=OptCnt.BndWdtScl;
             Cnt.Mth=OptCnt.Mth;
             Cnt.nMth=numel(Cnt.Mth);
+            Cnt.maxAscRng=OptCnt.maxAscRng;
             % From elsewhere
             Cnt.nLvl=numel(Mrg(1).RtrPrd);
             Cnt.MthLabel=cell(Cnt.nMth,1);
@@ -149,7 +152,7 @@ classdef Contour
             if any(strcmp(Cnt.Mth,'HTDns'))
                 fprintf(1,'Heffernan and Tawn Density contour\n')
                 tic
-                Cnt=HTDensity(Cnt,A,nA);
+                Cnt=HTDensity(Cnt,Mrg,A,nA);
                 toc            
             end
             
@@ -168,6 +171,39 @@ classdef Contour
             %Contours just computed at the bin
             Cnt.LvlOrg= permute(sOrig,[1,3,2]);  %range in X for contour on original scale
         end %GetLockPoint
+        
+        function [EdgCnd, EdgAsc] = createEdg(Cnt, Mrg, iBin, iAsc, A)
+            % create edges for HTdensity contour such that the lockpoint is
+            % in the centre of two edges
+            arguments
+                Cnt   Contour
+                Mrg   MarginalModel
+                iBin {mustBe.PositiveInteger}
+                iAsc {mustBe.PositiveInteger}
+                A = []
+            end
+            
+            nQ = size(Cnt.LvlOrg,2);
+            [EdgCnd, EdgAsc] = deal(cell(nQ,1));
+            for iQ = 1:size(Cnt.LvlOrg,2)
+                Lmt = squeeze(Cnt.LvlOrg(end, end, [1,iAsc+1]));
+                I_notinf = ~isinf(Cnt.Sml.Org(:, iAsc+1));
+                if ~isempty(A)
+                    I_notinf = I_notinf & (A == iBin);
+                end
+
+                mCnd = min(Cnt.Sml.Org(I_notinf, 1));
+                MCnd = Lmt(1) * 1.3;
+                EdgCnd{iQ} = Cnt.addPointToLinspace(mCnd, MCnd, Cnt.LvlOrg(iBin,iQ,1), Cnt.nGrd);
+
+                mAsc = min(Cnt.Sml.Org(I_notinf, iAsc+1));
+                MAsc = Lmt(1) * 1.3;
+                if MAsc > max(Mrg(iAsc+1).Y) + Cnt.maxAscRng*range(Mrg(iAsc+1).Y)
+                    MAsc = max(Mrg(iAsc+1).Y) + Cnt.maxAscRng*range(Mrg(iAsc+1).Y);
+                end
+                EdgAsc{iQ} = Cnt.addPointToLinspace(mAsc, MAsc, Cnt.LvlOrg(iBin,iQ,iAsc+1), Cnt.nGrd);
+            end
+        end % createEdg
         
         function Cnt=Exceedence(Cnt,A,nA)
             % Constant Exceedence probability contour
@@ -238,28 +274,62 @@ classdef Contour
                         %add on x_grd?
                         % grid in main and associated
                         x_grd = Cnt.XRng(:,iB,iQ);
-                        y_grd = linspace(min(SmlY),max((SmlY)),Cnt.nGrd)';
                         
                         % P(X>x)
                         P_x = sum((x_grd>SmlX').*fog',2)./sum(fog);
-                        % P(Y>y|X>x)
-                        P_ygx = nan(Cnt.nGrd,Cnt.nPnt);
-                        for iG = 1:Cnt.nPnt
+                        for iG = Cnt.nPnt:-1:1
                             I_x = SmlX(:,1)>x_grd(iG);
                             if any(I_x)
-                                P_ygx(:,iG) = Cnt.WeightedCDF(y_grd,SmlY(I_x),fog(I_x));
+                                optsDw = optimset('TolX',Cnt.LvlOrg(iB,iQ,iAsc+1)/1000,'TolFun',1e-2);
+                                optsUp = optimset('TolX',Cnt.LvlOrg(iB,iQ,iAsc+1)/1000,'TolFun',1e-2);
+                                
+                                if iG == Cnt.nPnt
+                                    dw_x0 = Cnt.LvlOrg(iB,iQ,iAsc+1);
+                                    lock_point = Cnt.LvlOrg(iB,iQ,iAsc+1);
+                                    up_x0 = Cnt.LvlOrg(iB,iQ,iAsc+1);
+                                else
+                                    dw_x0 = YDw(iG+1,iAsc);
+                                    lock_point = YDw(iG+1,iAsc);
+                                    up_x0 = YUp(iG+1,iAsc);
+                                end
+                                
+                                if iG == Cnt.nPnt
+                                    YDw(iG,iAsc) = lock_point;
+                                    YUp(iG,iAsc) = lock_point;
+                                    YDwNew(iG,iAsc) = lock_point;
+                                    YUpNew(iG,iAsc) = lock_point;
+                                    continue
+                                end
+                                I_xp = SmlX(:,1)>x_grd(iG+1);
+                                I_xq = SmlX(:,1)>x_grd(iG) & SmlX(:,1)<=x_grd(iG+1);
+                                f = @(delta)((Cnt.WeightedCDF(lock_point - delta ,SmlY(I_xq),fog(I_xq)) * (P_x(iG+1)-P_x(iG)) ...
+                                    + Cnt.WeightedCDF(lock_point - delta ,SmlY(I_xp),fog(I_xp)) * (1 - P_x(iG+1)))/p_Loc_Dwn ...
+                                    - 1+eps(100)*abs(delta));
+                                
+                                delta_start = 1;
+                                b = -1 + delta_start;
+                                while f(b) > 0
+                                    delta_start = delta_start * 2;
+                                    b = -1 + delta_start;
+                                end
+                                delta_opt = fzero(f,0,optsDw);
+                                YDw(iG,iAsc) = lock_point - delta_opt;
+                                
+                                f = @(delta)(((1-Cnt.WeightedCDF(lock_point + delta ,SmlY(I_xq),fog(I_xq))) * (P_x(iG+1)-P_x(iG)) ...
+                                    + (1-Cnt.WeightedCDF(lock_point + delta ,SmlY(I_xp),fog(I_xp))) * (1 - P_x(iG+1)))/p_Loc_Up ...
+                                    - 1+eps(100)*abs(delta));
+                                
+                                delta_start = 1;
+                                b = -1 + delta_start;
+                                while f(b) > 0
+                                    delta_start = delta_start * 2;
+                                    b = -1 + delta_start;
+                                end
+                                delta_opt = fzero(f,0,optsUp);
+                                YUp(iG,iAsc) = lock_point + delta_opt;
                             end
                             
                         end %iG
-                        
-                        % find y_Dw closest to this probability level
-                        tJnt=(P_ygx).*(1-P_x'); %joint Prb(Y>y,X>x) for a sequence of values of x
-                        YDw(:,iAsc)=Cnt.exceedanceSmooth(tJnt,y_grd,p_Loc_Dwn); % using linear interpolation (produces smoother output)
-                        
-                        % find y_Up closest to this probability level                        
-                        tJnt=(1-P_ygx).*(1-P_x'); %joint Prb(Y<=y,X>x) for a sequence of values of x
-                        YUp(:,iAsc)=Cnt.exceedanceSmooth(tJnt,y_grd,p_Loc_Up); % using linear interpolation (produces smoother output)
-                        
                     end %iAsc
                     
                     %store the 2 parts of the contour (up and down) together
@@ -297,7 +367,7 @@ classdef Contour
             
         end %Exceedence
         
-        function Cnt=HTDensity(Cnt,A,nA)
+        function Cnt=HTDensity(Cnt,Mrg,A,nA)
             % Contours of constant HT density
             %
             %% INPUTS
@@ -305,7 +375,7 @@ classdef Contour
             % A   bin Allocation vector
             % nA  nNumber of possible bin Allocations
 
-            if nargin<=1
+            if nargin<=2
                 A=Cnt.Sml.A;
                 nA=Cnt.nBin;
             end
@@ -336,81 +406,73 @@ classdef Contour
                     end
                     
                     %% use contour function to get iso-line.
-                    %setup gridded to bin density into
-                    I_notinf=~isinf(Cnt.Sml.Org(:,iAsc+1));
-                    
-                    
-                    YLimFct = 1.3;
                     if iBin>nA %omni case!!
                         fog=exp(sum(Cnt.Sml.logfog(:,[1,iAsc+1]),2)).*Cnt.Sml.W;
-                        Lmt=squeeze(Cnt.LvlOrg(end,end,[1,iAsc+1]));
-                        Edgx=linspace(min(Cnt.Sml.Org(I_notinf,1)),Lmt(1)*YLimFct,Cnt.nGrd+1);
-                        Edgy=linspace(min(Cnt.Sml.Org(I_notinf,iAsc+1)),max(Cnt.Sml.Org(I_notinf,iAsc+1))*YLimFct,Cnt.nGrd+1);
+                        
+                        [Edgx, Edgy] = createEdg(Cnt, Mrg, iBin, iAsc);
                     else
                         if ~any(A==iBin) % dealing with restricted domain cases with there is no data in a bin
                             continue
                         end
                         fog=exp(sum(Cnt.Sml.logfog(:,[1,iAsc+1]),2)).*Cnt.Sml.W;
-                        Lmt=squeeze(Cnt.LvlOrg(iBin,end,[1,iAsc+1]));
-                        Edgx=linspace(min(Cnt.Sml.Org(A==iBin & I_notinf,1)),Lmt(1)*YLimFct,Cnt.nGrd+1);
-                        Edgy=linspace(min(Cnt.Sml.Org(A==iBin & I_notinf,iAsc+1)),max(Cnt.Sml.Org(A==iBin & I_notinf,iAsc+1))*YLimFct,Cnt.nGrd+1);
-                        
+                        [Edgx, Edgy] = createEdg(Cnt, Mrg, iBin, iAsc, A);                    
                     end
                     
-                    Grdx=(Edgx(1:end-1)+Edgx(2:end))/2;
-                    Grdy=(Edgy(1:end-1)+Edgy(2:end))/2;
+                    nQ = size(Lck,1);
+                    for iQ = 1:nQ
                     
-                    [GX,GY]=ndgrid(Grdx,Grdy);
-                    G=[GX(:),GY(:)];
-                    
-                    Ax=discretize(Cnt.Sml.Org(:,1),Edgx);  %returns indices of the bins (Grdx) that SmlOrg falls into
-                    Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Edgy);
-                    
-                    GrdInd=sub2ind([Cnt.nGrd Cnt.nGrd],Ax,Ay);
-                    
-                    %% find gridded density estimate for current bin
-                    if iBin>nA %omni case!!
-                        I=~isnan(GrdInd); %in current bin and not a nan
-                    else
-                        I=  (~isnan(GrdInd)) & (A==iBin); %in current bin and not a nan
-                    end
-                    %% which bin is lock point in?
-                    
-                    Lx=discretize(Lck(:,1),Edgx);
-                    Ly=discretize(Lck(:,2),Edgy);
-                    L=sub2ind([Cnt.nGrd Cnt.nGrd],Lx,Ly);
-                    
-                    BW=Cnt.BndWdtScl.*(range(Cnt.Sml.Org(I,[1,iAsc+1])));
-                    f=reshape(ksdensity(Cnt.Sml.Org(I,[1,iAsc+1]),G,'Weights',fog(I),'Bandwidth',BW),[Cnt.nGrd Cnt.nGrd]);
-                    %% find lock point density value for each return level
-                    IL=find(~isnan(L));
-                    
-                    if isempty(IL)
-                        continue;
-                    end
-                    Lvl=f(L(IL));
-                    if numel(Lvl)==1
-                        Lvl=Lvl.*[1,1];
-                    end
-                    % compute contour using low level function
-                    C =contourc(Grdx,Grdy,f',Lvl);
-                    
-                    [I,J]=ismember(C(1,:),Lvl);   %identify different contour segments inside C by locating the separatprs 'Lvl' (see help file on contour...odd output style)
-                    Ind=J(I); %which contour does each segment belong to
-                    Count=cumsum(C(2,I)+1);  %cumulative sum of the number points in each contour segment
-                    
-                    c=0;
-                    for i=1:numel(Ind) %loop over line segments
-                        iLvl=IL(Ind(i)); %contour level;
-                        tI=c+2:Count(i);
-                        c=Count(i);
-                        %assign line segement to right level;
-                        if isempty(Cnt.XY{IMth}{iBin,iLvl,iAsc})
-                            Cnt.XY{IMth}{iBin,iLvl,iAsc}=C(:,tI);
+                        Grdx=(Edgx{iQ}(1:end-1)+Edgx{iQ}(2:end))/2;
+                        Grdy=(Edgy{iQ}(1:end-1)+Edgy{iQ}(2:end))/2;
+
+                        [GX,GY]=ndgrid(Grdx,Grdy);
+                        G=[GX(:),GY(:)];
+
+                        Ax=discretize(Cnt.Sml.Org(:,1),Edgx{iQ});  %returns indices of the bins (Grdx) that SmlOrg falls into
+                        Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Edgy{iQ});
+
+                        GrdInd=sub2ind([Cnt.nGrd Cnt.nGrd],Ax,Ay);
+
+                        %% find gridded density estimate for current bin
+                        if iBin>nA %omni case!!
+                            I=~isnan(GrdInd); %in current bin and not a nan
                         else
-                            Cnt.XY{IMth}{iBin,iLvl,iAsc}=[Cnt.XY{IMth}{iBin,iLvl,iAsc},[NaN;NaN],C(:,tI)];
+                            I=  (~isnan(GrdInd)) & (A==iBin); %in current bin and not a nan
                         end
-                    end %i
+                        %% which bin is lock point in?
+
+                        Lx=discretize(Lck(iQ,1),Edgx{iQ});
+                        Ly=discretize(Lck(iQ,2),Edgy{iQ});
+                        L=sub2ind([Cnt.nGrd Cnt.nGrd],Lx,Ly);
+
+                        BW=Cnt.BndWdtScl.*(range(Cnt.Sml.Org(I,[1,iAsc+1])));
+                        f=reshape(ksdensity(Cnt.Sml.Org(I,[1,iAsc+1]),G,'Weights',fog(I),'Bandwidth',BW),[Cnt.nGrd Cnt.nGrd]);
+                        %% find lock point density value for each return level
+                        if isnan(L)
+                            continue;
+                        end
+                        Lvl=f(L);
+                        if numel(Lvl)==1
+                            Lvl=Lvl.*[1,1];
+                        end
+                        % compute contour using low level function
+                        C =contourc(Grdx,Grdy,f',Lvl);
+
+                        [I,J]=ismember(C(1,:),Lvl);   %identify different contour segments inside C by locating the separatprs 'Lvl' (see help file on contour...odd output style)
+                        Ind=J(I); %which contour does each segment belong to
+                        Count=cumsum(C(2,I)+1);  %cumulative sum of the number points in each contour segment
+
+                        c=0;
+                        for i=1:numel(Ind) %loop over line segments
+                            tI=c+2:Count(i);
+                            c=Count(i);
+                            %assign line segement to right level;
+                            if isempty(Cnt.XY{IMth}{iBin,iQ,iAsc})
+                                Cnt.XY{IMth}{iBin,iQ,iAsc}=C(:,tI);
+                            else
+                                Cnt.XY{IMth}{iBin,iQ,iAsc}=[Cnt.XY{IMth}{iBin,iQ,iAsc},[NaN;NaN],C(:,tI)];
+                            end
+                        end %i
+                    end
                 end %iBin
             end%iAsc
             fprintf('\n');
@@ -808,7 +870,7 @@ classdef Contour
             %repmat to match sizes
             X=reshape(X.*ones([1,Sz]),[],SzOther);
             Y=reshape(Y.*ones([1,Sz]),[],SzOther);
-            if W_On
+            if W_On && ~(Sz==1 && SzOther==1)
                 W=reshape(W.*ones([1,Sz]),[],SzOther);
             end
             %% Sort data
@@ -981,8 +1043,31 @@ classdef Contour
             end %ti
         end %exceedanceSmooth
         
+        function Edg = addPointToLinspace(m, M, P, nGrd)
+            %Edg = addPointToLinspace(m, M, LockPoint, nGrd)
+            % Adapt linspace between m and M to include P as centre of two 
+            % consecutive points with minimal changes to the stepsize
+            
+            arguments
+                m(1,1)
+                M(1,1)
+                P(1,1) {mustBeGreaterThanOrEqual(P,m),mustBeLessThanOrEqual(P,M)}
+                nGrd(1,1) {mustBePositive,mustBeInteger}
+            end
+            
+            stepsize = (M - m) / nGrd;
+            steps = max(1, floor((P - m)/stepsize - 1/2));
+            newstepsize = (P - m) / (steps + 1/2);
+            Edg = m + (0:nGrd) * newstepsize;
+            
+            
+            if Edg(end) < M
+                warning(sprintf("Grid in Heffernan-Tawn density contour might not cover full range, consider one of two choices:\n" + ...
+                    "\t(1): Increase nGrd setting in OptionsContours; \n"+ ...
+                    "\t(2): Decrease maxAscRng in OptionsContours.")) %#ok<SPWRN>
+            end
+        end % addPointToLinspace
     end %methods (Static)
-    
 end %end class Contour
 
 
