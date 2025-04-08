@@ -1301,8 +1301,7 @@ classdef MarginalModel
                 
                 P(I)=1-exp(-Z(I));
             end
-            P(bsxfun(@le,X,Thr))=NaN; %density of zero below the threshold
-            P(Z<=0)=NaN;
+            P(bsxfun(@le,X,Thr))=0; %density of zero below the threshold
             
         end %gpcdf
         
@@ -1323,8 +1322,7 @@ classdef MarginalModel
                 
                 Q(I)=exp(-Z(I));
             end
-            Q(bsxfun(@le,X,Thr))=NaN; %density of zero below the threshold
-            Q(Z<=0)=NaN;
+            Q(bsxfun(@le,X,Thr))=1; %density of zero below the threshold
         end %gpsurvivor
         
         function F=gampdf(X,Alp,Bet,GmmLct)
