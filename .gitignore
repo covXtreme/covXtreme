@@ -20,6 +20,10 @@ slprj/
 # Session info
 octave-workspace
 
+*/Figures
+
 *.jpg
+*.png
+*.pdf
 
 Thumbs.db

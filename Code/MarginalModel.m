@@ -22,6 +22,7 @@ classdef MarginalModel
         RspSavLbl   %1 x 1 (string), rseponse label for saving plots (Avoid special characters)
         CvrLbl      %nCvr x 1, (string), covariate label vecotr
         nBoot=100;  %1 x 1, number of bootstrap resamples
+        nReps=1;   %1 x 1, number of replicated bootstrap NEP values
         RtrPrd=100; %nRtr x 1 Return Period  in years
         
         %% Parameters
@@ -35,15 +36,16 @@ classdef MarginalModel
         
         NEP      %nBoot x 1, Non Exceedence Probability Quantile threshold
         Thr      %nBin x nBoot, Extreme value threshold nBin x nB
+        ThrDiag  %nBin x 4, Extreme value threshold diagnostic on Exponential, Frechet, Laplace, Uniform margins
         Rat      %nBin x nBoot, count no. observations in each bin nBin x nB
         BSInd    %nDat x nBoot, bootstrap index;
         
         nCvr      % 1 x 1, number of covariates
-        nDat      % 1 x 1, number of data obs         
+        nDat      % 1 x 1, number of data obs
         %% Return Value
         RVSml    %Return value simulation
         
-        %% Margin choice 
+        %% Margin choice
         MarginType = 'Laplace' %Laplace or Gumbel
     end
     
@@ -73,7 +75,7 @@ classdef MarginalModel
     end
     
     methods
-        function obj=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType)
+        function obj=MarginalModel(Dat,iDmn,NEP,Bn,nB,Yrs,RtrPrd,CV,MarginType,nReps)
             %% INPUTS:
             % - Dat structure  (from stage 1)
             %     - Dat.X     nDat x nCvr  covariate values
@@ -90,6 +92,8 @@ classdef MarginalModel
             % - RtrPrd  return period (years) (assumed to be 100 if non speicifed)
             % - CV cross validation structure with control parameters
             % - MarginType, 'Gumbel', 'Laplace' (default is Laplace)
+            % - nReps number of replicated bootstrap samples if nRep=1,
+            % defaults to random sampling of the NEP range
             %% OUTPUTS:
             % - obj, Marginal Model class containing details of data and
             % fitted piecewise constant marginal model
@@ -116,7 +120,7 @@ classdef MarginalModel
             obj.Y=Dat.Y(:,iDmn);
             obj.RspLbl=Dat.RspLbl{iDmn};
             obj.RspSavLbl=Dat.RspLbl{iDmn};
-            obj.CvrLbl=Dat.CvrLbl;          
+            obj.CvrLbl=Dat.CvrLbl;
             % validate non exceedance probability
             validateattributes(NEP, {'numeric'},{'<=',1,'>=',0},'MarginalModel','NEP',3);  %0<=Tau<=1 NEP range
             % checking that the previous stage has been run
@@ -134,23 +138,32 @@ classdef MarginalModel
                     obj.nBoot=1;
                 end
             end
-            obj.NEP = [range(NEP)/2+min(NEP) ;sort(rand(obj.nBoot-1,1)).*range(NEP)+min(NEP)];  
-            %sample NEPs over range with middle of range first
-            % validate number of years of data 
+            % validate number of years of data
             if nargin>=6
                 validateattributes(Yrs, {'numeric'},{'scalar','positive'},'MarginalModel','Yrs',6);
                 obj.Yrs=Yrs;
             end
-            % validate return period choice 
+            % validate return period choice
             if nargin>=7
                 validateattributes(RtrPrd, {'numeric'},{'vector','positive'},'MarginalModel','RV',7);
                 obj.RtrPrd=sort(RtrPrd);
-                
             end
-            % validate margin type 
-            if nargin>=9
+            % validate margin type
+            if nargin>=8
                 validateattributes(MarginType,{'string','char'},{},'MarginalModel','MarginType',9)
                 obj.MarginType = validatestring(MarginType,{'Gumbel','Laplace'});
+            end
+            % validate margin type
+            if nargin>=10
+                validateattributes(nReps,{'numeric'},{'vector','positive'},'MarginalModel','nReps',10)
+                obj.nReps = nReps;
+            end
+            if obj.nReps == 1
+                %sample NEPs over range with middle of range first
+                obj.NEP = [range(NEP)/2+min(NEP) ;sort(rand(obj.nBoot-1,1)).*range(NEP)+min(NEP)];
+            else
+                obj.NEP = repmat(linspace(min(NEP), max(NEP),obj.nBoot/obj.nReps),obj.nReps,1);
+                obj.NEP = obj.NEP(:);
             end
             
             %% Check cross-validation inputs
@@ -180,7 +193,7 @@ classdef MarginalModel
             
             %% Preallocate Output Arrays
             obj.Scl=NaN(obj.Bn.nBin,obj.nBoot);  %Fitted Generalised Pareto Scale [nBin x nB]
-            obj.Shp=NaN(obj.nBoot,1);    %Fitted Generalised Paraeto Shape  [nB x 1]
+            obj.Shp=NaN(obj.nBoot,1);    %Fitted Generalised Pareto Shape  [nB x 1]
             obj.Omg=NaN(obj.Bn.nBin,obj.nBoot); %Gamma Shape Parameter [nBin x nB]
             obj.Kpp=NaN(obj.Bn.nBin,obj.nBoot); %Gamma Scale Parameter [nBin x nB]
             obj.GmmLct=NaN(obj.Bn.nBin,1); %Gamma Location Parameter [nBin x 1]
@@ -190,7 +203,7 @@ classdef MarginalModel
             obj.CVLackOfFit=NaN(obj.nSmth,obj.nBoot); %Lack of fit associated with different smoothness parameters [nSmth x nB]
             obj.BSInd=NaN(numel(obj.Y),obj.nBoot);  %Bootstrap sample indices nDat x nBoot
             obj.SmthSet=logspace(obj.SmthLB,obj.SmthUB,obj.nSmth); %try range smoothness penalties for sigma varying by bin [1 x nSmth]
-            
+            obj.ThrDiag=NaN(obj.nBoot,4); % Threshold diagnostic matrix on four different margins [nBin x nB]
             %% Fit model
             obj = Fit(obj);
             
@@ -255,6 +268,8 @@ classdef MarginalModel
                 %% Generalised Pareto Fit
                 obj=GPCrossValidation(obj,Rsd,ObsMax,AExc,iBt);
                 
+                %% Threshold diagnostic
+                obj=Threshold_Diagnostic(obj,iBt,tY,IExc,AExc);
             end
         end %BootMargModel
         
@@ -304,7 +319,7 @@ classdef MarginalModel
         function Sml=sample_MC(obj,nRls,A,nA)
             %% INPUTS
             % Simulate Monte Carlo draws from marginal model
-            % nRls number of realisations 
+            % nRls number of realisations
             % A [index of subper bins] bins to simulate
             % nA number of super bins
             %
@@ -316,9 +331,9 @@ classdef MarginalModel
             
             %Input A and nA super bins definitions
             if nargin<=2
-                A=ones(obj.Bn.nBin,1); %omni situation                
-            end    
-            uA=unique(A(A>0)); %find unique bins (handles rescricted domain case)         
+                A=ones(obj.Bn.nBin,1); %omni situation
+            end
+            uA=unique(A(A>0)); %find unique bins (handles rescricted domain case)
             %Input 4 number of super bins
             if nargin<=3
                 nA=max(A);
@@ -348,13 +363,13 @@ classdef MarginalModel
             end
             %Simulate data on uniform margins
             Sml.Unf=rand(nA,nRls);
-            %Probability integral to get the data onto original margins 
+            %Probability integral to get the data onto original margins
             Sml.Org=reshape(obj.INV(Sml.Unf(:),reshape(Sml.I,[],1),reshape(Sml.A,[],1)),nA,nRls);
         end %sample_MC
         
         function Sml=sample_RV_MC(obj,nRls,A,nA)
             % Simulate Monte Carlo draws from return value distribution
-            %% INPUTS 
+            %% INPUTS
             % nRls number of realisations
             % A [index of super bins] bins to simulate
             % nA number of super bins
@@ -367,8 +382,8 @@ classdef MarginalModel
             
             %Input A and nA super bins definitions
             if nargin<=2
-                A=ones(obj.Bn.nBin,1); %omni situation                
-            end      
+                A=ones(obj.Bn.nBin,1); %omni situation
+            end
             uA=unique(A(A>0)); %find unique bins (handles restricted domain case)
             %Input 4 number of super bins
             if nargin<=3
@@ -389,9 +404,9 @@ classdef MarginalModel
                 U=1+log(UX)./(LT); %[nBin x nRls]
                 U(U<0)=NaN; %non-occurence
                 tOrgAllBin=obj.INV(U,Sml.I); %[nBin x nRls]
-                for iA=1:numel(uA) %loop over each bin and take max                    
+                for iA=1:numel(uA) %loop over each bin and take max
                     tA=find(A==uA(iA));% local index within the loop
-                    [Sml.Org(uA(iA),:,iRtr),ind_max]=max(tOrgAllBin(tA,:),[],1);                    
+                    [Sml.Org(uA(iA),:,iRtr),ind_max]=max(tOrgAllBin(tA,:),[],1);
                     Sml.A(uA(iA),:,iRtr)=tA(ind_max);
                     ind_jnt=sub2ind([obj.Bn.nBin,nRls],Sml.A(uA(iA),:,iRtr),1:nRls); %need joint index
                     Sml.Unf(uA(iA),:,iRtr)=U(ind_jnt);
@@ -405,7 +420,7 @@ classdef MarginalModel
         function Sml=sample_MC_CondX(obj,nRls,A,nA,RspCond)
             % Simulate Monte Carlo draws conditional on chosen input XCond
             %%
-            %% INPUTS 
+            %% INPUTS
             % nRls number of realisations
             % A [index of super bins] bins to simulate
             % nA number of super bins
@@ -429,11 +444,11 @@ classdef MarginalModel
             end
             Sml.nRls=nRls;
             %decide which bootstrap sample to use over all bootstraps HT.nBoot
-            Sml.I=randi(obj.nBoot,1,nRls);          
+            Sml.I=randi(obj.nBoot,1,nRls);
             tnRtr=size(RspCond,3);
             %preallocate
             [Sml.Unf,Sml.A]=deal(NaN(nA,nRls,tnRtr));
-            Sml.Org=RspCond(:,Sml.I,:); %assign response 
+            Sml.Org=RspCond(:,Sml.I,:); %assign response
             
             %% Sample bin with right rate condition on A
             for iA=1:numel(uA)
@@ -580,7 +595,7 @@ classdef MarginalModel
             %if I vector --> case where inverse CDF in across sampled bins and bootstraps
             %if P matrix --> case where finding inverse CDF for all bootstraps and bins
             %% OUTPUTS
-            %X data on original margins 
+            %X data on original margins
             X=NaN(size(P));
             p=size(P);
             if numel(I)==1
@@ -598,7 +613,7 @@ classdef MarginalModel
                 case 1 %I scalar --> case where finding inverse CDF in single bin
                     X=MarginalModel.gamgpinv(P,obj.Shp(I),obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(A,I),obj.NEP(I));
                     
-                case 2  %I vector --> case where inverse CDF in across sampled bins and bootstraps                  
+                case 2  %I vector --> case where inverse CDF in across sampled bins and bootstraps
                     if obj.Bn.nBin==1
                         X=MarginalModel.gamgpinv(P,obj.Shp(I),obj.Scl(I)',obj.Thr(I)',obj.Omg(I)',obj.Kpp(I)',obj.GmmLct,obj.NEP(I));
                     else
@@ -660,6 +675,12 @@ classdef MarginalModel
                     X = -log(-log(P));
                 case 'Laplace'
                     X = sign(0.5-P).*log(2*min(1-P,P));
+                case 'Frechet'
+                    X = -1./log(P);
+                case 'Exponential'
+                    X = -log(1-P);
+                case 'Uniform'
+                    X = P;
                 otherwise
                     error('Margin Type not recognised')
             end
@@ -686,7 +707,7 @@ classdef MarginalModel
                 case 'Gumbel'
                     P = exp(-exp(-X));
                 case 'Laplace'
-                    P = (X>0)-.5*sign(X).*exp(-abs(X));
+                    P = (X>0)-.5*sign(X).*exp(-abs(X));                   
                 otherwise
                     error('Margin Type not recognised')
             end
@@ -731,6 +752,44 @@ classdef MarginalModel
             F(isnan(F))=0;
         end %LogPDF_Standard
         
+        function obj=Threshold_Diagnostic(obj,iBt,tY,IExc,AExc,nPts_Eval)
+            %% Threshold diagnostic based on QQ metrics
+            % Evalulation of Murphy et al (2024) and Varty (Exponential
+            % margins version)
+            % Results are visualised in PlotThresholdDiagnostic
+            % Threshold metric is shown on 4 different margins
+            %% INPUTS
+            %iBt: index for the bootsrap sample
+            %tY: sample of data points
+            %IExc: index of those points above the threshold
+            %Aexc: bin index of those points above the threshold
+            %nPts_Eval: number of points to evalulate the CDF to calculate
+            %the discprenacy
+            if nargin<6
+                nPts_Eval=1000;
+            end
+            % ensure margin type for modelling is maintained
+            tMarginType=obj.MarginType;
+            % emp probabilities
+            Emp_Prob=(1:nPts_Eval)/(nPts_Eval+1);
+            % extract threshold exceedances
+            tYExc=tY(IExc);
+            %Convert to CDF
+            gp_cdf=MarginalModel.gpcdf(tYExc,obj.Shp(iBt,:),obj.Scl(AExc,iBt),obj.Thr(AExc,iBt));
+            MarginTypeEval={'Exponential','Frechet','Laplace','Uniform'};
+            for iMargin=1:numel(MarginTypeEval)
+                obj.MarginType=MarginTypeEval{iMargin};
+                % data on the margin
+                data_margin=obj.INV_Standard(gp_cdf);
+                model_data=quantile(data_margin,Emp_Prob);
+                % emp data
+                emp_data=obj.INV_Standard(Emp_Prob);
+                obj.ThrDiag(iBt,iMargin)=mean(abs(model_data-emp_data));
+            end
+            % rest back margin type 
+            obj.MarginType=tMarginType;
+        end %Threshold_Diagnostic
+        
         function Plot(obj)
             %Plot results of PPC marginal fit
             
@@ -761,7 +820,7 @@ classdef MarginalModel
             obj.PlotQQ;
             
             %% Threshold uncertianty
-            if obj.nBoot>1 && numel(unique(obj.NEP))>1
+            if obj.nBoot > 1 && numel(unique(obj.NEP))>1
                 figure(7);
                 clf;
                 obj.PlotThresholdStability;
@@ -771,6 +830,13 @@ classdef MarginalModel
             figure(8);
             clf;
             obj.PlotRV;
+            
+            %% Threshold diagnostic plot
+            if obj.nReps > 1
+                figure(9);
+                clf;
+                obj.PlotThresholdDiagnostic;
+            end
             
         end %Plot
         
@@ -809,7 +875,7 @@ classdef MarginalModel
                 ylabel(obj.RspLbl)
                 axis tight
                 grid on
-
+                
                 if nSubPlt > 1
                     %Data on uniform margins
                     subplot(obj.Bn.nCvr,nSubPlt,2+3*(iC-1))
@@ -882,7 +948,7 @@ classdef MarginalModel
                 end
                 title(sprintf('%s: Gamma shape',obj.RspLbl))
                 grid on;
-                 
+                
                 %Gam scale
                 subplot(obj.Bn.nCvr,3,(iC-1)*3+3)
                 if obj.Bn.nBin > 1
@@ -908,7 +974,7 @@ classdef MarginalModel
             %Constant Xi: Fitted GP shape (black)
             histogram(obj.Shp,'edgecolor','none','facecolor','k','normalization','pdf')
             xlabel('\xi')
-            ylabel('Empirical density');      
+            ylabel('Empirical density');
             title(sprintf('%s: GP shape',obj.RspLbl))
             grid on;
             
@@ -956,12 +1022,12 @@ classdef MarginalModel
                 end
                 
                 for iB=1:obj.Bn.nBin
-
+                    
                     subplot(nPlt2,nPlt1,iB)
                     
                     I=obj.Bn.A==iB;
                     if any(I)
-                        P = (0:sum(I)-1)./sum(I);                        
+                        P = (0:sum(I)-1)./sum(I);
                         plot(sort(obj.Y(I)),log10(1-P),'r.') %data
                         axis tight
                         hold on
@@ -1056,16 +1122,16 @@ classdef MarginalModel
                 end
                 XOmni=sort(max(obj.RVSml.Org(:,:,iRtr),[],1)); %take max over bins
                 plot(XOmni,linspace(0,1,numel(XOmni)),'k','linewidth',2)
-
+                
                 %20230426 Phil tidy up xlim (for consistency with conditional return value plot)
                 talPrb=1e-3;
                 lb=min(quantile(obj.RVSml.Org(:,:,iRtr),talPrb,2));
                 ub=max(quantile(obj.RVSml.Org(:,:,iRtr),1-talPrb,2));
                 xlim([lb ub]);
-
+                
                 plot(xlim,[0.5,0.5],'--k')
                 plot(xlim,[exp(-1),exp(-1)],'--k')
-
+                
                 ylabel('Cumulative probability')
                 xlabel(obj.RspLbl)
                 
@@ -1080,6 +1146,38 @@ classdef MarginalModel
             savePics(fullfile(obj.FigureFolder,sprintf('Stg3_%s_8_ReturnValueCDF',obj.RspSavLbl)))
         end %PlotRV
         
+        function PlotThresholdDiagnostic(obj)
+            tidxNEP=repmat(1:obj.nBoot/obj.nReps,obj.nReps,1);
+            idxNEP=tidxNEP(:);
+            unique_NEP=unique(obj.NEP);          
+            % metrics per margin 
+            OverallThrDiagExp=accumarray(idxNEP,obj.ThrDiag(:,1),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagFre=accumarray(idxNEP,obj.ThrDiag(:,2),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagLap=accumarray(idxNEP,obj.ThrDiag(:,3),[max(idxNEP), 1],@(x)(mean(x)));
+            OverallThrDiagUni=accumarray(idxNEP,obj.ThrDiag(:,4),[max(idxNEP), 1],@(x)(mean(x)));
+            subplot(2,2,1)
+            plot(unique_NEP,OverallThrDiagExp./sum(OverallThrDiagExp),'-ok','LineWidth',2);
+            xlabel('Non Exceedance Probability');
+            ylabel('Standardised Metric');
+            title('Threshold Diagnostic Metric: Exponential Margins');
+            subplot(2,2,2)
+            plot(unique_NEP,OverallThrDiagUni./sum(OverallThrDiagUni),'-ok','LineWidth',2);
+            xlabel('Non Exceedance Probability');
+            ylabel('Standardised Metric');
+            title('Threshold Diagnostic Metric: Uniform Margins');
+            subplot(2,2,3)
+            plot(unique_NEP,OverallThrDiagLap./sum(OverallThrDiagLap),'-ok','LineWidth',2);
+            xlabel('Non Exceedance Probability');
+            ylabel('Standardised Metric');
+            title('Threshold Diagnostic Metric: Laplace Margins');
+            subplot(2,2,4)
+            plot(unique_NEP,OverallThrDiagFre./sum(OverallThrDiagFre),'-ok','LineWidth',2);
+            xlabel('Non Exceedance Probability');
+            ylabel('Standardised Metric');
+            title('Threshold Diagnostic Metric: Frechet Margins');
+            savePics(fullfile(obj.FigureFolder,sprintf('Stg3_%s_9_ThresholdDiagnostic',obj.RspSavLbl)))
+        end %PlotThresholdDiagnostic
+        
         function [Y,A,I]=GetBootstrapSample(obj,I)
             % if iBt==1 use original sample
             Y = obj.Y(I);
@@ -1091,10 +1189,10 @@ classdef MarginalModel
             % INPUTS:
             % Rsd - Y-u threshold exceedances
             % AExc - bin allocation of exceedances
-            % ObsMax - observation max used in the upper end point of the GP 
+            % ObsMax - observation max used in the upper end point of the GP
             % iBt - bootstrap index
             % OUTPUT:
-            % fitted GP model with optimal smoothness 
+            % fitted GP model with optimal smoothness
             
             %% Constant Starting Solution (method of moments)
             xbar=mean(Rsd);
@@ -1432,7 +1530,7 @@ classdef MarginalModel
         end %gamgpsurvivor
         
         function f=gamgppdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
-            % f=gamgpcdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution         
+            % f=gamgpcdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution
             %threshold
             IBlw=bsxfun(@le,X,Thr);
             %gamma part
@@ -1447,7 +1545,7 @@ classdef MarginalModel
         end %gamgppdf
         
         function f=loggamgppdf(X,Xi,Sgm,Thr,Alp,Bet,GmmLct,Tau)
-            % f=loggamgppdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution           
+            % f=loggamgppdf(X,Xi,Sgm,Alp,Bet,GmmLct,Tau) returns the pdf of the gamma-gp distribution
             %threshold
             IBlw=X<=Thr;
             %gamma part
