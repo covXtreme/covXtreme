@@ -33,14 +33,15 @@ IsPrdCrv=[1,1];   %flag dictating periodicity of covariate(s). If 1, covariate d
 Asc=[wave.hs,wind.spd];  %associated variable(s) 
 
 NEP=0.7; %non-exceedence quantile level used to set peak picking threshold 
+IsStrTrj = 1; % Set to 1 to allow the use of storm trajectories.
 
 %% Peak Picking
 
 if ~exist(fullfile(cd,'Figures'),'dir')
     mkdir('Figures')
 end
-    
-Dat=PeakPicking(Rsp,Cvr,Asc,IsPrdCrv,NEP,RspLbl,CvrLbl);
+
+Dat=PeakPicking(Rsp,Cvr,Asc,IsPrdCrv,NEP,RspLbl,CvrLbl,IsStrTrj);
 
 %% Save
 if ~exist('Output','dir')
@@ -52,3 +53,7 @@ else
     end
 end
 save('Output\Data','Dat');
+
+%% Optional: Trajectory plot
+%TrajectoryPlot(Dat.Y, Dat.StrTrj, RspLbl, CvrLbl, [], 'Stg1_Data_StormTrajectory')
+

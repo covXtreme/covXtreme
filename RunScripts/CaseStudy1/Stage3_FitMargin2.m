@@ -36,7 +36,7 @@ iDmn=2;  %which dimension to fit
 NEP=[0.7,0.9];  %GP non exceedence probability range
 nB=100;   %number bootstrap resamples
 Yrs=34;  %number of years of data
-RtrPrd=[10,100]; %vector of return Periods
+RtrPrd=[100]; %vector of return Periods
 
 %% Cross Validation defaults (Optional can specify some or all of these)
 CV.CVMth=0;     %0 Only Cross Validate smoothness for original dataset (fast);
