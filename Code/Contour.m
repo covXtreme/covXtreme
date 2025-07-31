@@ -365,7 +365,6 @@ classdef Contour
                     
                     Ax=discretize(Cnt.Sml.Org(:,1),Edgx);  %returns indices of the bins (Grdx) that SmlOrg falls into
                     Ay=discretize(Cnt.Sml.Org(:,iAsc+1),Edgy);
-                    
                     GrdInd = nan(size(Ax));
                     I = ~any(isnan([Ax,Ay]),2);
                     GrdInd(I) = sub2ind([Cnt.nGrd Cnt.nGrd],Ax(I,:),Ay(I,:));
