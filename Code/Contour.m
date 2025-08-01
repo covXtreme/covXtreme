@@ -379,7 +379,9 @@ classdef Contour
                     
                     Lx=discretize(Lck(:,1),Edgx);
                     Ly=discretize(Lck(:,2),Edgy);
-                    L=sub2ind([Cnt.nGrd Cnt.nGrd],Lx,Ly);
+                    L=nan(size(Lx));
+                    I=~any(isnan([Lx,Ly]),2);
+                    L(I)=sub2ind([Cnt.nGrd Cnt.nGrd],Lx(I,:),Ly(I,:));
                     
                     BW=Cnt.BndWdtScl.*(range(Cnt.Sml.Org(I,[1,iAsc+1])));
                     f=reshape(ksdensity(Cnt.Sml.Org(I,[1,iAsc+1]),G,'Weights',fog(I),'Bandwidth',BW),[Cnt.nGrd Cnt.nGrd]);

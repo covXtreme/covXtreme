@@ -129,7 +129,11 @@ classdef CovariateBinning
             
             Bn.nBin=prod(Bn.nBinCvr);
             Bn.APrj=cell(1,Bn.nCvr);
-            [Bn.APrj{:}]=ind2sub([Bn.nBinCvr, ones(numel(Bn.nBinCvr), 1)],(1:Bn.nBin)');
+            if numel(Bn.nBinCvr)>1
+                [Bn.APrj{:}]=ind2sub(Bn.nBinCvr,(1:Bn.nBin)');
+            else
+                [Bn.APrj{:}]=ind2sub([Bn.nBinCvr, ones(numel(Bn.nBinCvr), 1)],(1:Bn.nBin)');
+            end
             Bn.APrj=cell2mat(Bn.APrj);
             
             Bn.BinLbl=cell(Bn.nCvr,1);
