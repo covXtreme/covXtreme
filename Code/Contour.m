@@ -373,7 +373,7 @@ classdef Contour
                     if iBin>nA %omni case!!
                         I=~isnan(GrdInd); %in current bin and not a nan
                     else
-                        I=  (~isnan(GrdInd)) & (A==iBin); %in current bin and not a nan
+                        I=(~isnan(GrdInd)) & (A==iBin); %in current bin and not a nan
                     end
                     %% which bin is lock point in?
                     
