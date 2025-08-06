@@ -78,12 +78,15 @@ classdef CovariateBinning
             PlotBins(Bn,X,Y)
         end %CovariateBinning
         
-        function Bn=BinAllocation(Bn,X)
+        function Bn=BinAllocation(Bn,X, iVrb)
             %% Loop over covariates and bin in each dimension
             %% INPUTS
             %    Bn [n x 1] bin allocation
             %% OUTPUTS
             %    Bn populated Bn object
+            if nargin<3
+                iVrb=1;
+            end
             Bn.nBinCvr=NaN(Bn.nCvr,1); %number of bins
             ADmn=NaN(Bn.n, Bn.nCvr);  %bin allocation for each dimension
             for iC=1:Bn.nCvr %loop over covariates
@@ -172,7 +175,7 @@ classdef CovariateBinning
             end  %iC          
             %% Ensure have no empty bins (or bins with <30 obs)          
             Bn.Cnt=accumarray(Bn.A,Bn.A,[Bn.nBin,1],@numel); %
-            if any(Bn.Cnt < 30)
+            if iVrb == 1 && any(Bn.Cnt < 30)
                 warning('Too few exceedances in one or more bins. Consider reducing number of bins.');
                 Bn.Cnt
             end

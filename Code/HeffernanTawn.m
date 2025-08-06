@@ -76,7 +76,7 @@ classdef HeffernanTawn
         function obj=HeffernanTawn(Mrg,HTNEP,NonStationary,CV,SmpLclRsdOn)
             %obj=HeffernanTawn(Mrg,HTNEP,NonStationary,CV,SmpLclRsdOn)
             %INPUT
-            % - Mrg 2 x 1, marignal model structure *output from stage 3
+            % - Mrg 2 x 1, marginal model structure *output from stage 3
             % - HTNEP (scalar), Non-exceedance probability for conditional
             % - NonStationary flag for non stationary alpha
             %(Optional)
