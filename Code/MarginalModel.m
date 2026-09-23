@@ -637,7 +637,7 @@ classdef MarginalModel
             
             switch Cs
                 case 1 %I scalar --> case where finding inverse CDF in single bin
-                    X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(I),obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(A,I),obj.NEP(I));
+                    X=MarginalModel.gamgpinvsurvivor(Q,obj.Shp(I),obj.Scl(A,I),obj.Thr(A,I),obj.Omg(A,I),obj.Kpp(A,I),obj.GmmLct(I),obj.NEP(I));
                     
                 case 2  %I vector --> case where inverse CDF in across sampled bins and bootstraps                  
                     if obj.Bn.nBin==1
